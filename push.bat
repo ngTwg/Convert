@@ -78,11 +78,11 @@ echo      OK - Done
 
 REM Push
 echo [3/3] Pushing to GitHub...
-git push -u origin main
+git push -u origin HEAD:main
 if !errorlevel! neq 0 (
     echo.
     echo [WARN] Push that bai. Thu push voi force...
-    git push -u origin main --force
+    git push -u origin HEAD:main --force
     if !errorlevel! neq 0 (
         echo [ERROR] Khong the push! Kiem tra lai ket noi hoac quyen truy cap.
         pause
