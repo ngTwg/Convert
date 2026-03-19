@@ -3,6 +3,18 @@
 > **Premium desktop file converter & editor for Windows**
 > Convert between 19 input formats and 9 output formats with high quality • Edit output in-app • Batch processing
 
+[Đọc bản Tiếng Việt 🇻🇳](README_VI.md)
+
+---
+
+## 📥 Downloads (For End Users)
+
+**Fastest way to get started:**
+1. Navigate to the [**Releases**](../../releases/latest) section on the right side of GitHub.
+2. Download the `.exe` setup file (e.g., `MultiConvert_Setup_v0.1.0.exe`).
+3. Run it and follow the standard installation wizard (Next → Install).
+4. Optionally, you can automatically install LibreOffice and Tesseract OCR during setup if your PC doesn't have them yet.
+
 ---
 
 ## ✨ Features
