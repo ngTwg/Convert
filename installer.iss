@@ -46,12 +46,13 @@ Name: "vietnamese"; MessagesFile: "compiler:Languages\Vietnamese.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "download_lo"; Description: "Tải và Cài đặt thêm LibreOffice (Cần thiết để chuyển Office sang PDF)"; GroupDescription: "Công cụ bổ sung (Khuyên dùng nếu chưa có):"; Flags: unchecked
+Name: "download_ocr"; Description: "Tải và Cài đặt thêm Tesseract OCR (Cần thiết để quét chữ từ ảnh/PDF scan)"; GroupDescription: "Công cụ bổ sung (Khuyên dùng nếu chưa có):"; Flags: unchecked
 
 [Files]
 ; Main application files
 Source: "dist\{#MyAppName}\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\{#MyAppName}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -60,13 +61,13 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+; Install downloaded tools silently if downloaded
+Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\LibreOffice.msi"" /qn"; Tasks: download_lo; StatusMsg: "Đang cài đặt LibreOffice (Vui lòng chờ, quá trình này mất khoảng 3-5 phút)..."
+Filename: "{tmp}\Tesseract.exe"; Parameters: "/S"; Tasks: download_ocr; StatusMsg: "Đang cài đặt Tesseract OCR..."
 
 [Code]
 var
-  AboutPage: TOutputMsgMemoWizardPage;
-  DependencyPage: TOutputMsgMemoWizardPage;
-  LibreOfficeInstalled: Boolean;
-  TesseractInstalled: Boolean;
+  DownloadPage: TDownloadWizardPage;
 
 function CheckLibreOffice(): Boolean;
 var
@@ -88,70 +89,49 @@ end;
 
 procedure InitializeWizard;
 begin
-  AboutPage := CreateOutputMsgMemoPage(wpWelcome,
-    'Giới thiệu / About MultiConvert',
-    'Thông tin phần mềm / Application Information',
-    'MultiConvert là công cụ chuyển đổi tài liệu đa định dạng cho Windows.' + #13#10 + #13#10 +
-    'MultiConvert is a multi-format document converter for Windows.' + #13#10 + #13#10,
-    '');
-
-  AboutPage.RichEditViewer.Lines.Add('Tên ứng dụng / Application: MultiConvert');
-  AboutPage.RichEditViewer.Lines.Add('Phiên bản / Version: {#MyAppVersion}');
-  AboutPage.RichEditViewer.Lines.Add('Bản quyền / Copyright: Lê Ngọc Tường - Đại học Khoa học Tự nhiên (HCMUS)');
-  AboutPage.RichEditViewer.Lines.Add('Trang dự án / Project: {#MyAppURL}');
-  AboutPage.RichEditViewer.Lines.Add('');
-  AboutPage.RichEditViewer.Lines.Add('Tính năng chính / Highlights:');
-  AboutPage.RichEditViewer.Lines.Add('- Chuyển đổi 19 định dạng đầu vào sang 9 định dạng đầu ra');
-  AboutPage.RichEditViewer.Lines.Add('- Bộ chuyển đổi đa engine: Pandoc, LibreOffice, OCR');
-  AboutPage.RichEditViewer.Lines.Add('- Hỗ trợ chỉnh sửa văn bản trong ứng dụng');
-
-  DependencyPage := CreateOutputMsgMemoPage(AboutPage.ID,
-    'Kiểm Tra Phụ Thuộc / Dependency Check',
-    'Công cụ chuyển đổi bổ sung / Optional Conversion Engines',
-    'MultiConvert có thể hoạt động với các bộ chuyển đổi sau để mở rộng khả năng:' + #13#10 + #13#10 +
-    'MultiConvert can work with the following optional engines for enhanced capabilities:' + #13#10 + #13#10,
-    '');
-
-  LibreOfficeInstalled := CheckLibreOffice();
-  TesseractInstalled := CheckTesseract();
-
-  DependencyPage.RichEditViewer.Lines.Add('✓ PANDOC - Tích hợp sẵn (Bundled)');
-  DependencyPage.RichEditViewer.Lines.Add('  Chuyển đổi: MD, HTML, DOCX, EPUB, ODT, RTF, TXT');
-  DependencyPage.RichEditViewer.Lines.Add('');
-
-  if LibreOfficeInstalled then
-    DependencyPage.RichEditViewer.Lines.Add('✓ LIBREOFFICE - Đã cài đặt (Installed)')
-  else begin
-    DependencyPage.RichEditViewer.Lines.Add('✗ LIBREOFFICE - Chưa cài đặt (Not Installed)');
-    DependencyPage.RichEditViewer.Lines.Add('  Khuyến nghị: Tải tại https://www.libreoffice.org/');
-    DependencyPage.RichEditViewer.Lines.Add('  Recommended: Download from https://www.libreoffice.org/');
-  end;
-  DependencyPage.RichEditViewer.Lines.Add('  Chức năng: Chuyển đổi DOC, PPTX, XLSX → PDF');
-  DependencyPage.RichEditViewer.Lines.Add('  Feature: Convert DOC, PPTX, XLSX → PDF');
-  DependencyPage.RichEditViewer.Lines.Add('');
-
-  if TesseractInstalled then
-    DependencyPage.RichEditViewer.Lines.Add('✓ TESSERACT OCR - Đã cài đặt (Installed)')
-  else begin
-    DependencyPage.RichEditViewer.Lines.Add('✗ TESSERACT OCR - Chưa cài đặt (Not Installed)');
-    DependencyPage.RichEditViewer.Lines.Add('  Khuyến nghị: Tải tại https://github.com/UB-Mannheim/tesseract/wiki');
-    DependencyPage.RichEditViewer.Lines.Add('  Recommended: Download from https://github.com/UB-Mannheim/tesseract/wiki');
-  end;
-  DependencyPage.RichEditViewer.Lines.Add('  Chức năng: Nhận diện chữ từ ảnh (JPG, PNG) và PDF scan');
-  DependencyPage.RichEditViewer.Lines.Add('  Feature: OCR from images (JPG, PNG) and scanned PDFs');
-  DependencyPage.RichEditViewer.Lines.Add('');
-  DependencyPage.RichEditViewer.Lines.Add('─────────────────────────────────────────────');
-  DependencyPage.RichEditViewer.Lines.Add('');
-  DependencyPage.RichEditViewer.Lines.Add('Lưu ý: Bạn có thể cài đặt các công cụ này sau.');
-  DependencyPage.RichEditViewer.Lines.Add('Note: You can install these tools later.');
-  DependencyPage.RichEditViewer.Lines.Add('MultiConvert sẽ tự động phát hiện khi chúng được cài đặt.');
-  DependencyPage.RichEditViewer.Lines.Add('MultiConvert will automatically detect them when installed.');
+  DownloadPage := CreateDownloadPage(SetupMessage(msgWizardPreparing), SetupMessage(msgPreparingDesc), nil);
 end;
 
-procedure CurStepChanged(CurStep: TSetupStep);
+procedure CurPageChanged(CurPageID: Integer);
 begin
-  if CurStep = ssPostInstall then
+  if CurPageID = wpSelectTasks then
   begin
-    // Additional post-install tasks can be added here
+    // Disable tasks if already installed
+    if CheckLibreOffice() then
+      WizardForm.TasksList.ItemEnabled[1] := False; // 'download_lo' is 2nd item (index 1) usually if desktopicon is 0
+    if CheckTesseract() then
+      WizardForm.TasksList.ItemEnabled[2] := False; // 'download_ocr' is 3rd item
   end;
+end;
+
+function NextButtonClick(CurPageID: Integer): Boolean;
+begin
+  if CurPageID = wpReady then begin
+    DownloadPage.Clear;
+    if IsTaskSelected('download_lo') and not CheckLibreOffice() then
+      DownloadPage.Add('https://download.documentfoundation.org/libreoffice/stable/7.6.6/win/x86_64/LibreOffice_7.6.6_Win_x86-64.msi', 'LibreOffice.msi', '');
+    if IsTaskSelected('download_ocr') and not CheckTesseract() then
+      DownloadPage.Add('https://digi.bib.uni-mannheim.de/tesseract/tesseract-ocr-w64-setup-5.3.3.20231005.exe', 'Tesseract.exe', '');
+    
+    if DownloadPage.Msg1Label.Caption <> '' then // Meaning files were added
+    begin
+      DownloadPage.Show;
+      try
+        try
+          DownloadPage.Download;
+          Result := True;
+        except
+          if DownloadPage.AbortedByUser then
+            Log('Aborted by user.')
+          else
+            MsgBox('Lỗi khi tải xuống các gói bổ sung. Vui lòng kiểm tra lại mạng.', mbError, MB_OK);
+          Result := False; // Stop installation if download fails
+        end;
+      finally
+        DownloadPage.Hide;
+      end;
+    end else
+      Result := True;
+  end else
+    Result := True;
 end;

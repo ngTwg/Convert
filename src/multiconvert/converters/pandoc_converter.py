@@ -82,8 +82,8 @@ class PandocConverter(BaseConverter):
         command = [
             self._pandoc or "pandoc",
             str(source),
-            "-f", self._pandoc_format(source_format),
-            "-t", self._pandoc_format(target_format),
+            "-f", self._pandoc_format(source_format, is_input=True),
+            "-t", self._pandoc_format(target_format, is_input=False),
             "-o", str(destination),
             "--resource-path", str(source.parent),
             "--standalone",
@@ -107,9 +107,10 @@ class PandocConverter(BaseConverter):
         run_command(command)
 
     @staticmethod
-    def _pandoc_format(fmt: str) -> str:
+    def _pandoc_format(fmt: str, is_input: bool = False) -> str:
+        if fmt == "txt":
+            return "markdown" if is_input else "plain"
         mapping = {
             "md": "markdown",
-            "txt": "plain",
         }
         return mapping.get(fmt, fmt)
