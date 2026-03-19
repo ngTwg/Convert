@@ -54,6 +54,8 @@ ICON_DROP     = "📥"
 ICON_BATCH    = "📚"
 ICON_REMOVE   = "✕"
 
+APP_COPYRIGHT = "Lê Ngọc Tường - Đại học Khoa học Tự nhiên (HCMUS)"
+
 
 class DropZone(QFrame):
     """Drag-and-drop region that accepts file paths."""
@@ -278,6 +280,9 @@ class MainWindow(QMainWindow):
         # ── Status bar ──
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
+        self.owner_label = QLabel(f"© {APP_COPYRIGHT}")
+        self.owner_label.setObjectName("subtitleLabel")
+        self.status_bar.addPermanentWidget(self.owner_label)
         self.engine_status = QLabel()
         self.engine_status.setObjectName("statusLabel")
         self.status_bar.addPermanentWidget(self.engine_status)
