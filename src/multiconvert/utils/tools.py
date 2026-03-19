@@ -116,6 +116,8 @@ def run_command(
         cwd=str(cwd) if cwd else None,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=timeout,
         check=False,
     )

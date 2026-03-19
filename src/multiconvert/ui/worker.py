@@ -55,17 +55,17 @@ class BatchConvertWorker(QObject):
         for i, request in enumerate(self._requests, 1):
             source_path = str(request.source)
 
-            # Emit start progress
-            self.file_progress.emit(source_path, 0)
-
             try:
-                # Simulate progress stages
+                # Emit start
                 self.file_progress.emit(source_path, 10)
 
+                # Convert
                 result = self._manager.convert(request, logger=self.log.emit)
 
+                # Emit complete - MUST use str for output path
+                output_path = str(result.destination)
                 self.file_progress.emit(source_path, 100)
-                self.file_complete.emit(source_path, str(result.destination))
+                self.file_complete.emit(source_path, output_path)
                 success += 1
 
             except Exception as exc:
@@ -73,7 +73,9 @@ class BatchConvertWorker(QObject):
                 self.file_error.emit(source_path, error_msg)
                 failed_list.append(request.source.name)
 
+            # Emit overall progress
             self.progress.emit(i, total)
 
+        # IMPORTANT: Emit batch_finished BEFORE done
         self.batch_finished.emit(success, total, failed_list)
         self.done.emit()

@@ -1,19 +1,20 @@
 """
-MultiConvert – Clean Main Window
-Minimalist design with file progress bars, dependency checks, and onboarding.
+MultiConvert – Clean Main Window v2
+Fixed bugs, added history, output folder selection, click-to-browse drop zone.
 """
 from __future__ import annotations
 
 import importlib.metadata
 import os
 import subprocess
+import json
 from pathlib import Path
+from datetime import datetime
 
 from PySide6.QtCore import (
-    Qt, QPropertyAnimation, QEasingCurve, QThread, Signal, QTimer,
-    QSettings, QSize
+    Qt, QThread, Signal, QTimer, QSettings, QSize
 )
-from PySide6.QtGui import QAction, QDragEnterEvent, QDropEvent, QFont
+from PySide6.QtGui import QAction, QDragEnterEvent, QDropEvent, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -21,7 +22,6 @@ from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
     QFrame,
-    QGraphicsOpacityEffect,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -34,7 +34,7 @@ from PySide6.QtWidgets import (
     QStatusBar,
     QVBoxLayout,
     QWidget,
-    QSpacerItem,
+    QSplitter,
 )
 
 from multiconvert.formats import TEXT_EDITABLE_FORMATS, detect_format, ensure_extension
@@ -42,7 +42,7 @@ from multiconvert.manager import ConverterManager
 from multiconvert.models import ConversionRequest, ConversionResult
 from multiconvert.ui.worker import ConvertWorker
 
-APP_COPYRIGHT = "Le Ngoc Tuong - HCMUS"
+APP_COPYRIGHT = "Bản quyền đầy đủ thuộc Lê Ngọc Tường Github/ngTwg. HCMUS."
 
 
 def app_version() -> str:
@@ -52,54 +52,96 @@ def app_version() -> str:
         return "0.2.0"
 
 
+def get_app_icon() -> QIcon:
+    """Get application icon from tools folder or use default."""
+    import sys
+    # Check various locations for icon
+    search_paths = [
+        Path(__file__).parent.parent.parent.parent / "tools" / "logo.ico",
+        Path(sys.executable).parent / "tools" / "logo.ico",
+        Path.cwd() / "tools" / "logo.ico",
+    ]
+    for path in search_paths:
+        if path.exists():
+            return QIcon(str(path))
+    return QIcon()
+
+
 # ═══════════════════════════════════════════════════════════
-#  FILE ITEM WIDGET - Individual progress per file
+#  FILE ITEM WIDGET
 # ═══════════════════════════════════════════════════════════
 
 class FileItemWidget(QWidget):
     """Widget showing a single file with its conversion progress."""
     removeClicked = Signal(str)
+    renameClicked = Signal(str)
 
     def __init__(self, file_path: str, parent=None) -> None:
         super().__init__(parent)
         self.file_path = file_path
-        self.setObjectName("fileItemWidget")
+        self.output_path = ""
+        self.setFixedHeight(50)
         self._setup_ui()
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 8, 12, 8)
-        layout.setSpacing(6)
+        layout.setContentsMargins(10, 6, 10, 6)
+        layout.setSpacing(4)
 
-        # Top row: filename + remove button
+        # Top row: filename + controls
         top_row = QHBoxLayout()
         top_row.setSpacing(8)
 
+        # File icon (simple text)
+        icon_lbl = QLabel("□")
+        icon_lbl.setFixedWidth(16)
+        icon_lbl.setStyleSheet("color: #666666; font-size: 12px;")
+        top_row.addWidget(icon_lbl)
+
         self.name_label = QLabel(Path(self.file_path).name)
-        self.name_label.setStyleSheet("color: #E0E0E0; font-size: 12px; font-weight: 500;")
-        top_row.addWidget(self.name_label)
+        self.name_label.setStyleSheet("color: #E0E0E0; font-size: 12px;")
+        
+        self.rename_btn = QPushButton("✎ Đổi")
+        self.rename_btn.setFixedSize(45, 20)
+        self.rename_btn.setStyleSheet(
+            "QPushButton { background: transparent; border: 1px solid #4A9EFF; border-radius: 3px; color: #4A9EFF; font-size: 11px; }"
+            "QPushButton:hover { background: rgba(74, 158, 255, 0.1); color: #5AABFF; }"
+        )
+        self.rename_btn.clicked.connect(self._rename_output)
+        self.rename_btn.setVisible(False)
+        self.rename_btn.setToolTip("Ghi đè file / Đổi tên")
+
+        name_layout = QHBoxLayout()
+        name_layout.setContentsMargins(0, 0, 0, 0)
+        name_layout.setSpacing(4)
+        name_layout.addWidget(self.name_label)
+        name_layout.addWidget(self.rename_btn)
+        name_layout.addStretch()
+        top_row.addLayout(name_layout, 1)
 
         # Format badge
         fmt = detect_format(self.file_path) or "?"
         self.format_label = QLabel(fmt.upper())
+        self.format_label.setFixedWidth(45)
+        self.format_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.format_label.setStyleSheet(
-            "color: #888888; font-size: 10px; padding: 2px 6px; "
-            "border: 1px solid #444444; border-radius: 3px;"
+            "color: #888888; font-size: 9px; padding: 2px 4px; "
+            "border: 1px solid #444444; border-radius: 2px;"
         )
         top_row.addWidget(self.format_label)
 
-        top_row.addStretch()
-
-        # Status label
-        self.status_label = QLabel("Ready")
+        # Status
+        self.status_label = QLabel("Sẵn sàng")
+        self.status_label.setFixedWidth(70)
+        self.status_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.status_label.setStyleSheet("color: #666666; font-size: 11px;")
         top_row.addWidget(self.status_label)
 
         # Remove button
         self.remove_btn = QPushButton("×")
-        self.remove_btn.setFixedSize(20, 20)
+        self.remove_btn.setFixedSize(18, 18)
         self.remove_btn.setStyleSheet(
-            "QPushButton { background: transparent; border: none; color: #666666; font-size: 16px; }"
+            "QPushButton { background: transparent; border: none; color: #555555; font-size: 14px; }"
             "QPushButton:hover { color: #F44336; }"
         )
         self.remove_btn.clicked.connect(lambda: self.removeClicked.emit(self.file_path))
@@ -107,85 +149,125 @@ class FileItemWidget(QWidget):
 
         layout.addLayout(top_row)
 
-        # Progress bar
+        # Progress bar (thin)
         self.progress = QProgressBar()
-        self.progress.setObjectName("fileProgress")
+        self.progress.setFixedHeight(3)
         self.progress.setRange(0, 100)
         self.progress.setValue(0)
         self.progress.setTextVisible(False)
-        self.progress.setFixedHeight(4)
+        self.progress.setStyleSheet(
+            "QProgressBar { background: #2A2A2A; border: none; border-radius: 1px; }"
+            "QProgressBar::chunk { background: #4A9EFF; border-radius: 1px; }"
+        )
         self.progress.setVisible(False)
         layout.addWidget(self.progress)
 
-    def set_progress(self, value: int) -> None:
-        """Update progress (0-100)."""
-        self.progress.setVisible(True)
-        self.progress.setValue(value)
-        self.status_label.setText(f"{value}%")
-        self.status_label.setStyleSheet("color: #4A9EFF; font-size: 11px;")
+        # Style container
+        self.setStyleSheet(
+            "FileItemWidget { background: #242424; border: 1px solid #333333; border-radius: 4px; }"
+        )
 
     def set_converting(self) -> None:
-        """Mark as currently converting."""
         self.progress.setVisible(True)
-        self.progress.setRange(0, 0)  # Indeterminate
-        self.status_label.setText("Converting...")
+        self.progress.setRange(0, 0)
+        self.status_label.setText("Đang chuyển đổi...")
         self.status_label.setStyleSheet("color: #4A9EFF; font-size: 11px;")
         self.remove_btn.setEnabled(False)
 
-    def set_complete(self) -> None:
-        """Mark as completed successfully."""
+    def set_progress(self, value: int) -> None:
+        self.progress.setVisible(True)
+        self.progress.setRange(0, 100)
+        self.progress.setValue(value)
+        self.status_label.setText(f"{value}%")
+
+    def set_complete(self, output_path: str = "") -> None:
+        self.output_path = output_path
         self.progress.setRange(0, 100)
         self.progress.setValue(100)
-        self.status_label.setText("Done")
+        self.progress.setStyleSheet(
+            "QProgressBar { background: #2A2A2A; border: none; border-radius: 1px; }"
+            "QProgressBar::chunk { background: #4CAF50; border-radius: 1px; }"
+        )
+        self.status_label.setText("Hoàn tất")
         self.status_label.setStyleSheet("color: #4CAF50; font-size: 11px; font-weight: 600;")
-        self.setObjectName("fileItemComplete")
-        self.setStyleSheet("QWidget#fileItemComplete { border: 1px solid #4CAF50; }")
+        self.setStyleSheet(
+            "FileItemWidget { background: #242424; border: 1px solid #4CAF50; border-radius: 4px; }"
+        )
+        self.rename_btn.setVisible(True)
+        self.remove_btn.setEnabled(True)
 
-    def set_error(self, message: str = "Failed") -> None:
-        """Mark as failed."""
+    def _rename_output(self) -> None:
+        if not self.output_path or not Path(self.output_path).exists():
+            return
+        from PySide6.QtWidgets import QInputDialog, QMessageBox
+        
+        old_path = Path(self.output_path)
+        new_name, ok = QInputDialog.getText(
+            self, "Đổi tên file", "Tên file mới:", text=old_path.name
+        )
+        if ok and new_name and new_name != old_path.name:
+            new_path = old_path.parent / new_name
+            if new_path.exists():
+                QMessageBox.warning(self, "Lỗi", "File đã tồn tại!")
+                return
+            try:
+                old_path.rename(new_path)
+                self.output_path = str(new_path)
+                self.name_label.setText(new_path.name)
+            except Exception as e:
+                QMessageBox.warning(self, "Lỗi", f"Không thể đổi tên file:\n{e}")
+
+    def set_error(self, message: str = "Lỗi") -> None:
         self.progress.setVisible(False)
-        self.status_label.setText("Error")
-        self.status_label.setStyleSheet("color: #F44336; font-size: 11px; font-weight: 600;")
+        self.status_label.setText("Lỗi")
+        self.status_label.setStyleSheet("color: #F44336; font-size: 11px;")
         self.status_label.setToolTip(message)
-        self.setObjectName("fileItemError")
-        self.setStyleSheet("QWidget#fileItemError { border: 1px solid #F44336; }")
+        self.setStyleSheet(
+            "FileItemWidget { background: #242424; border: 1px solid #F44336; border-radius: 4px; }"
+        )
+        self.remove_btn.setEnabled(True)
 
 
 # ═══════════════════════════════════════════════════════════
-#  DROP ZONE
+#  DROP ZONE (Clickable)
 # ═══════════════════════════════════════════════════════════
 
 class DropZone(QFrame):
-    """Clean drag-and-drop region."""
+    """Clickable drag-and-drop region."""
     filesDropped = Signal(list)
+    clicked = Signal()
 
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
         self.setObjectName("dropZone")
         self.setAcceptDrops(True)
-        self.setMinimumHeight(120)
+        self.setMinimumHeight(100)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
 
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.setSpacing(8)
+        layout.setSpacing(6)
 
-        # Simple icon (text-based)
         icon = QLabel("+")
         icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         icon.setStyleSheet(
-            "font-size: 32px; font-weight: 300; color: #444444; background: transparent; border: none;"
+            "font-size: 28px; font-weight: 300; color: #444444; background: transparent;"
         )
         layout.addWidget(icon)
 
-        hint = QLabel("Drop files here or click Browse")
-        hint.setObjectName("dropHint")
+        hint = QLabel("Kéo thả file vào đây hoặc bấm để chọn")
+        hint.setStyleSheet("color: #888888; font-size: 13px; background: transparent;")
         hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(hint)
 
-        sub = QLabel("Supports: PDF, DOCX, MD, HTML, EPUB, Images, and 30+ more formats")
-        sub.setObjectName("subtitleLabel")
+        sub = QLabel("Hỗ trợ PDF, DOCX, MD, HTML, EPUB, Ảnh...")
+        sub.setStyleSheet("color: #555555; font-size: 11px; background: transparent;")
         sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(sub)
+
+    def mousePressEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit()
 
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
         if event.mimeData().hasUrls():
@@ -209,117 +291,194 @@ class DropZone(QFrame):
 
 
 # ═══════════════════════════════════════════════════════════
-#  WELCOME DIALOG - Onboarding & Help
+#  HISTORY ITEM
+# ═══════════════════════════════════════════════════════════
+
+class HistoryItem(QWidget):
+    """Single history entry."""
+    def __init__(self, data: dict, parent=None) -> None:
+        super().__init__(parent)
+        self.data = data
+        self.setFixedHeight(38)
+        self._setup_ui()
+
+    def _setup_ui(self) -> None:
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(8, 2, 8, 2)
+        layout.setSpacing(8)
+
+        # Time
+        time_str = self.data.get("time", "")
+        time_lbl = QLabel(time_str)
+        time_lbl.setFixedWidth(40)
+        time_lbl.setStyleSheet("color: #555555; font-size: 10px;")
+        layout.addWidget(time_lbl)
+
+        # Filename and Path
+        center_vbox = QVBoxLayout()
+        center_vbox.setSpacing(0)
+        center_vbox.setContentsMargins(0, 0, 0, 0)
+
+        name = Path(self.data.get("output", "")).name
+        self.name_lbl = QLabel(name)
+        self.name_lbl.setStyleSheet("color: #AAAAAA; font-size: 11px;")
+
+        self.rename_btn = QPushButton("✎ Sửa")
+        self.rename_btn.setFixedSize(40, 20)
+        self.rename_btn.setStyleSheet(
+            "QPushButton { background: transparent; border: 1px solid #333333; color: #888888; font-size: 10px; border-radius: 2px; }"
+            "QPushButton:hover { border-color: #4A9EFF; color: #4A9EFF; }"
+        )
+        self.rename_btn.setToolTip("Ghi đè file / Đổi tên")
+        self.rename_btn.clicked.connect(self._rename_output)
+
+        name_row = QHBoxLayout()
+        name_row.setContentsMargins(0, 0, 0, 0)
+        name_row.setSpacing(4)
+        name_row.addWidget(self.name_lbl)
+        name_row.addWidget(self.rename_btn)
+        name_row.addStretch()
+        
+        center_vbox.addLayout(name_row)
+
+        path_str = str(Path(self.data.get("output", "")).parent)
+        path_lbl = QLabel(path_str)
+        path_lbl.setStyleSheet("color: #555555; font-size: 9px;")
+        # Fix long paths stretching layout too much
+        # We can let layout stretch apply to the vbox.
+        center_vbox.addWidget(path_lbl)
+        layout.addLayout(center_vbox, 1)
+
+        # Size
+        size_kb = self.data.get("size_kb", 0)
+        size_lbl = QLabel(f"{size_kb:.1f} KB")
+        size_lbl.setFixedWidth(55)
+        size_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
+        size_lbl.setStyleSheet("color: #555555; font-size: 10px;")
+        layout.addWidget(size_lbl)
+
+        # Open button
+        open_btn = QPushButton("Mở")
+        open_btn.setFixedSize(36, 20)
+        open_btn.setStyleSheet(
+            "QPushButton { background: transparent; border: 1px solid #333333; "
+            "color: #666666; font-size: 9px; border-radius: 2px; }"
+            "QPushButton:hover { border-color: #4A9EFF; color: #4A9EFF; }"
+        )
+        open_btn.clicked.connect(self._open_file)
+        layout.addWidget(open_btn)
+
+    def _open_file(self) -> None:
+        path = Path(self.data.get("output", ""))
+        if path.exists():
+            if os.name == "nt":
+                import os
+                os.startfile(path)
+            else:
+                subprocess.run(["xdg-open", str(path)], check=False)
+
+    def _rename_output(self) -> None:
+        path = Path(self.data.get("output", ""))
+        if not path.exists():
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.warning(self, "Lỗi", "File không còn tồn tại ở vị trí này!")
+            return
+            
+        from PySide6.QtWidgets import QInputDialog, QMessageBox
+        
+        new_name, ok = QInputDialog.getText(
+            self, "Đổi tên file", "Tên file mới:", text=path.name
+        )
+        if ok and new_name and new_name != path.name:
+            new_path = path.parent / new_name
+            if new_path.exists():
+                QMessageBox.warning(self, "Lỗi", "File đã tồn tại ở đích đến!")
+                return
+            try:
+                path.rename(new_path)
+                self.data["output"] = str(new_path)
+                self.name_lbl.setText(new_name)
+            except Exception as e:
+                QMessageBox.warning(self, "Lỗi", f"Không thể đổi tên file:\n{e}")
+
+
+# ═══════════════════════════════════════════════════════════
+#  WELCOME DIALOG
 # ═══════════════════════════════════════════════════════════
 
 class WelcomeDialog(QDialog):
-    """Onboarding dialog shown on first run."""
-
     def __init__(self, manager: ConverterManager, parent=None) -> None:
         super().__init__(parent)
         self._manager = manager
-        self.setWindowTitle("Welcome to MultiConvert")
-        self.setFixedSize(500, 450)
+        self.setWindowTitle("Chào Mừng")
+        self.setWindowIcon(get_app_icon())
+        self.setFixedSize(450, 380)
         self.setModal(True)
         self._setup_ui()
 
     def _setup_ui(self) -> None:
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(32, 32, 32, 24)
-        layout.setSpacing(20)
+        layout.setContentsMargins(28, 24, 28, 20)
+        layout.setSpacing(16)
 
-        # Title
         title = QLabel("MultiConvert")
-        title.setStyleSheet("color: #FFFFFF; font-size: 24px; font-weight: 700;")
+        title.setStyleSheet("color: #FFFFFF; font-size: 22px; font-weight: 700;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
 
-        subtitle = QLabel(f"Version {app_version()} - 35+ formats supported")
-        subtitle.setStyleSheet("color: #666666; font-size: 12px;")
+        subtitle = QLabel(f"v{app_version()} - 35+ formats")
+        subtitle.setStyleSheet("color: #666666; font-size: 11px;")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(subtitle)
 
-        layout.addSpacing(10)
+        layout.addSpacing(8)
 
-        # Quick Start Guide
-        guide_title = QLabel("Quick Start")
-        guide_title.setStyleSheet("color: #4A9EFF; font-size: 14px; font-weight: 600;")
-        layout.addWidget(guide_title)
+        # Quick guide
+        guide = QLabel("Bắt Đầu Nhanh")
+        guide.setStyleSheet("color: #4A9EFF; font-size: 13px; font-weight: 600;")
+        layout.addWidget(guide)
 
         steps = [
-            "1. Drop files or click Browse to select files",
-            "2. Choose output format from the dropdown",
-            "3. Click Convert to start",
-            "4. Files are saved in the same folder with new extension",
+            "1. Kéo thả file hoặc bấm để chọn",
+            "2. Chọn định dạng đích",
+            "3. Chọn thư mục lưu (tuỳ chọn)",
+            "4. Nhấn Chuyển đổi",
         ]
         for step in steps:
             lbl = QLabel(step)
-            lbl.setStyleSheet("color: #AAAAAA; font-size: 12px; padding-left: 8px;")
+            lbl.setStyleSheet("color: #AAAAAA; font-size: 11px; padding-left: 6px;")
             layout.addWidget(lbl)
 
-        layout.addSpacing(10)
+        layout.addSpacing(8)
 
-        # System Status
-        status_title = QLabel("System Status")
-        status_title.setStyleSheet("color: #4A9EFF; font-size: 14px; font-weight: 600;")
-        layout.addWidget(status_title)
+        # System status
+        status = QLabel("Trạng thái Hệ thống")
+        status.setStyleSheet("color: #4A9EFF; font-size: 13px; font-weight: 600;")
+        layout.addWidget(status)
 
         active = self._manager.active_converters()
         names = {c.name for c in active}
 
-        status_grid = QHBoxLayout()
-        status_grid.setSpacing(16)
-
-        # Pandoc status
-        pandoc_ok = "pandoc" in names
-        pandoc_lbl = QLabel(f"{'OK' if pandoc_ok else 'Not Found'}  Pandoc")
-        pandoc_lbl.setStyleSheet(
-            f"color: {'#4CAF50' if pandoc_ok else '#FF9800'}; font-size: 12px;"
-        )
-        status_grid.addWidget(pandoc_lbl)
-
-        # LibreOffice status
-        lo_ok = "libreoffice" in names
-        lo_lbl = QLabel(f"{'OK' if lo_ok else 'Not Found'}  LibreOffice")
-        lo_lbl.setStyleSheet(
-            f"color: {'#4CAF50' if lo_ok else '#FF9800'}; font-size: 12px;"
-        )
-        status_grid.addWidget(lo_lbl)
-
-        # Tesseract OCR status
-        ocr_ok = "ocr" in names
-        ocr_lbl = QLabel(f"{'OK' if ocr_ok else 'Not Found'}  Tesseract OCR")
-        ocr_lbl.setStyleSheet(
-            f"color: {'#4CAF50' if ocr_ok else '#FF9800'}; font-size: 12px;"
-        )
-        status_grid.addWidget(ocr_lbl)
-
-        status_grid.addStretch()
-        layout.addLayout(status_grid)
-
-        # Warning if missing
-        if not lo_ok or not ocr_ok:
-            warn = QLabel(
-                "Some converters are not available. "
-                "Install LibreOffice for Office files, Tesseract for OCR."
-            )
-            warn.setStyleSheet("color: #FF9800; font-size: 11px;")
-            warn.setWordWrap(True)
-            layout.addWidget(warn)
+        status_row = QHBoxLayout()
+        for name, label in [("pandoc", "Pandoc"), ("libreoffice", "LibreOffice"), ("ocr", "Tesseract")]:
+            ok = name in names
+            lbl = QLabel(f"{'✓' if ok else '○'} {label}")
+            lbl.setStyleSheet(f"color: {'#4CAF50' if ok else '#666666'}; font-size: 11px;")
+            status_row.addWidget(lbl)
+        status_row.addStretch()
+        layout.addLayout(status_row)
 
         layout.addStretch()
 
-        # Don't show again checkbox
-        self.dont_show_chk = QCheckBox("Don't show this again")
-        self.dont_show_chk.setStyleSheet("color: #666666;")
-        layout.addWidget(self.dont_show_chk)
+        self.dont_show = QCheckBox("Không hiện lại")
+        self.dont_show.setStyleSheet("color: #666666; font-size: 11px;")
+        layout.addWidget(self.dont_show)
 
-        # Get Started button
-        start_btn = QPushButton("Get Started")
-        start_btn.setObjectName("primaryBtn")
-        start_btn.setMinimumHeight(40)
-        start_btn.clicked.connect(self.accept)
-        layout.addWidget(start_btn)
+        btn = QPushButton("Bắt Đầu")
+        btn.setObjectName("primaryBtn")
+        btn.setMinimumHeight(36)
+        btn.clicked.connect(self.accept)
+        layout.addWidget(btn)
 
 
 # ═══════════════════════════════════════════════════════════
@@ -327,231 +486,295 @@ class WelcomeDialog(QDialog):
 # ═══════════════════════════════════════════════════════════
 
 class MainWindow(QMainWindow):
-    """Clean minimalist converter window."""
-
     def __init__(self, manager: ConverterManager) -> None:
         super().__init__()
         self._manager = manager
         self._thread: QThread | None = None
-        self._worker: ConvertWorker | None = None
-        self._last_result: ConversionResult | None = None
         self._batch_files: list[str] = []
         self._file_widgets: dict[str, FileItemWidget] = {}
+        self._output_folder: str = ""
+        self._history: list[dict] = []
         self._settings = QSettings("MultiConvert", "MultiConvert")
+        self._converting = False
+        self._completed_count = 0
+        self._total_count = 0
 
         self.setWindowTitle("MultiConvert")
-        self.resize(900, 700)
-        self.setMinimumSize(700, 500)
+        self.setWindowIcon(get_app_icon())
+        self.resize(800, 650)
+        self.setMinimumSize(600, 450)
         self.setAcceptDrops(True)
 
+        self._load_history()
         self._build_ui()
         self._build_menu()
         self._bind_events()
         self._update_status()
 
-        # Show welcome dialog on first run
         QTimer.singleShot(100, self._maybe_show_welcome)
 
     def _maybe_show_welcome(self) -> None:
-        """Show welcome dialog if first run."""
         if not self._settings.value("hide_welcome", False, type=bool):
             dialog = WelcomeDialog(self._manager, self)
             dialog.exec()
-            if dialog.dont_show_chk.isChecked():
+            if dialog.dont_show.isChecked():
                 self._settings.setValue("hide_welcome", True)
-
-    # ═══════════════════════════════════════════════════════
-    #  UI CONSTRUCTION
-    # ═══════════════════════════════════════════════════════
 
     def _build_ui(self) -> None:
         central = QWidget()
         central.setObjectName("centralWidget")
         root = QVBoxLayout(central)
-        root.setContentsMargins(24, 20, 24, 12)
-        root.setSpacing(16)
+        root.setContentsMargins(16, 12, 16, 8)
+        root.setSpacing(10)
 
         # Header
         header = QHBoxLayout()
+        header.setSpacing(8)
+
         title = QLabel("MultiConvert")
-        title.setObjectName("titleLabel")
+        title.setStyleSheet("color: #FFFFFF; font-size: 18px; font-weight: 600;")
         header.addWidget(title)
+
         header.addStretch()
 
-        # Help button
-        help_btn = QPushButton("?")
-        help_btn.setFixedSize(28, 28)
-        help_btn.setObjectName("secondaryBtn")
-        help_btn.setToolTip("Help & About")
-        help_btn.clicked.connect(self._show_help)
-        header.addWidget(help_btn)
+        # App logo in header
+        logo_label = QPushButton()
+        logo_label.setFixedSize(28, 28)
+        logo_label.setStyleSheet("QPushButton { border: none; background: transparent; }")
+        icon = get_app_icon()
+        if not icon.isNull():
+            logo_label.setIcon(icon)
+            logo_label.setIconSize(QSize(24, 24))
+        else:
+            logo_label.setText("◎")
+            logo_label.setStyleSheet("color: #4A9EFF; font-size: 18px; border: none; background: transparent;")
+        logo_label.setToolTip(f"MultiConvert v{app_version()} - Chào mừng")
+        logo_label.setCursor(Qt.CursorShape.PointingHandCursor)
+        logo_label.clicked.connect(lambda: WelcomeDialog(self._manager, self).exec())
+        header.addWidget(logo_label)
 
         root.addLayout(header)
 
-        # Drop Zone
-        self.drop_zone = DropZone()
-        root.addWidget(self.drop_zone)
+        # Main content splitter
+        splitter = QSplitter(Qt.Orientation.Vertical)
+        splitter.setHandleWidth(1)
+        splitter.setStyleSheet("QSplitter::handle { background: #333333; }")
 
-        # File List (scrollable)
-        self.file_list_container = QWidget()
-        self.file_list_layout = QVBoxLayout(self.file_list_container)
+        # Top section
+        top_widget = QWidget()
+        top_layout = QVBoxLayout(top_widget)
+        top_layout.setContentsMargins(0, 0, 0, 0)
+        top_layout.setSpacing(10)
+
+        # Drop zone
+        self.drop_zone = DropZone()
+        top_layout.addWidget(self.drop_zone)
+
+        # File list
+        self.file_list_widget = QWidget()
+        self.file_list_layout = QVBoxLayout(self.file_list_widget)
         self.file_list_layout.setContentsMargins(0, 0, 0, 0)
-        self.file_list_layout.setSpacing(8)
-        self.file_list_layout.addStretch()
+        self.file_list_layout.setSpacing(4)
 
         self.file_scroll = QScrollArea()
-        self.file_scroll.setWidget(self.file_list_container)
+        self.file_scroll.setWidget(self.file_list_widget)
         self.file_scroll.setWidgetResizable(True)
-        self.file_scroll.setMaximumHeight(200)
+        self.file_scroll.setMaximumHeight(150)
         self.file_scroll.setVisible(False)
         self.file_scroll.setStyleSheet("QScrollArea { border: none; background: transparent; }")
-        root.addWidget(self.file_scroll)
+        top_layout.addWidget(self.file_scroll)
 
-        # Output Settings Row
-        settings_row = QHBoxLayout()
-        settings_row.setSpacing(12)
+        # Settings row
+        settings = QHBoxLayout()
+        settings.setSpacing(10)
 
-        lbl_fmt = QLabel("Convert to:")
-        settings_row.addWidget(lbl_fmt)
-
+        settings.addWidget(QLabel("Định dạng:"))
         self.target_combo = QComboBox()
         self.target_combo.addItems(sorted(self._manager.all_formats()))
-        self.target_combo.setMinimumWidth(100)
-        if "pdf" in [self.target_combo.itemText(i) for i in range(self.target_combo.count())]:
-            self.target_combo.setCurrentText("pdf")
-        settings_row.addWidget(self.target_combo)
+        self.target_combo.setMinimumWidth(80)
+        self.target_combo.setCurrentText("pdf")
+        settings.addWidget(self.target_combo)
 
-        settings_row.addStretch()
+        settings.addWidget(QLabel("Lưu tại:"))
+        self.folder_input = QLineEdit()
+        # Set default to user's Documents folder
+        default_folder = str(Path.home() / "Documents")
+        self.folder_input.setText(default_folder)
+        self.folder_input.setReadOnly(True)
+        self.folder_input.setStyleSheet(
+            "QLineEdit { color: #AAAAAA; background: #2A2A2A; border: 1px solid #333333; "
+            "border-radius: 3px; padding: 4px 8px; }"
+        )
+        self._output_folder = default_folder
+        self.folder_input.setMinimumWidth(150)
+        settings.addWidget(self.folder_input, 1)
 
-        self.chk_open_after = QCheckBox("Open after conversion")
-        self.chk_open_after.setChecked(True)
-        settings_row.addWidget(self.chk_open_after)
+        self.browse_folder_btn = QPushButton("Duyệt")
+        self.browse_folder_btn.setFixedWidth(60)
+        self.browse_folder_btn.setStyleSheet(
+            "QPushButton { background: #2A2A2A; border: 1px solid #333333; "
+            "border-radius: 3px; color: #AAAAAA; font-size: 11px; padding: 4px 8px; }"
+            "QPushButton:hover { border-color: #4A9EFF; }"
+        )
+        settings.addWidget(self.browse_folder_btn)
 
-        self.chk_ocr = QCheckBox("Use OCR")
-        self.chk_ocr.setToolTip("Enable OCR for scanned PDFs and images")
-        settings_row.addWidget(self.chk_ocr)
+        top_layout.addLayout(settings)
 
-        root.addLayout(settings_row)
+        # Options row
+        opts = QHBoxLayout()
+        opts.setSpacing(16)
 
-        # Action Buttons
-        action_row = QHBoxLayout()
-        action_row.setSpacing(12)
+        self.chk_open = QCheckBox("Mở file sau khi xong")
+        self.chk_open.setChecked(True)
+        self.chk_open.setStyleSheet("color: #888888; font-size: 11px;")
+        opts.addWidget(self.chk_open)
 
-        self.btn_browse = QPushButton("Browse Files")
-        self.btn_browse.setObjectName("secondaryBtn")
-        self.btn_browse.setMinimumHeight(40)
-        action_row.addWidget(self.btn_browse)
+        self.chk_ocr = QCheckBox("Dùng OCR")
+        self.chk_ocr.setStyleSheet("color: #888888; font-size: 11px;")
+        opts.addWidget(self.chk_ocr)
 
-        self.btn_convert = QPushButton("Convert")
-        self.btn_convert.setObjectName("primaryBtn")
-        self.btn_convert.setMinimumHeight(40)
-        self.btn_convert.setMinimumWidth(140)
-        action_row.addWidget(self.btn_convert)
+        opts.addStretch()
 
-        self.btn_open = QPushButton("Open Result")
-        self.btn_open.setObjectName("successBtn")
-        self.btn_open.setEnabled(False)
-        self.btn_open.setMinimumHeight(40)
-        action_row.addWidget(self.btn_open)
-
-        self.btn_clear = QPushButton("Clear All")
-        self.btn_clear.setObjectName("secondaryBtn")
+        self.btn_clear = QPushButton("Xóa tất cả")
         self.btn_clear.setVisible(False)
-        action_row.addWidget(self.btn_clear)
+        self.btn_clear.setStyleSheet(
+            "QPushButton { background: transparent; border: 1px solid #444444; "
+            "border-radius: 3px; color: #888888; font-size: 11px; padding: 4px 12px; }"
+            "QPushButton:hover { border-color: #F44336; color: #F44336; }"
+        )
+        opts.addWidget(self.btn_clear)
 
-        root.addLayout(action_row)
+        top_layout.addLayout(opts)
 
-        # Overall Progress
-        self.overall_progress = QProgressBar()
-        self.overall_progress.setRange(0, 100)
-        self.overall_progress.setValue(0)
-        self.overall_progress.setTextVisible(True)
-        self.overall_progress.setFormat("%p%")
-        self.overall_progress.setVisible(False)
-        self.overall_progress.setFixedHeight(20)
-        root.addWidget(self.overall_progress)
+        # Action buttons
+        actions = QHBoxLayout()
+        actions.setSpacing(10)
 
-        root.addStretch()
+        self.btn_convert = QPushButton("Chuyển đổi")
+        self.btn_convert.setMinimumHeight(38)
+        self.btn_convert.setStyleSheet(
+            "QPushButton { background: #4A9EFF; border: none; border-radius: 4px; "
+            "color: #FFFFFF; font-size: 13px; font-weight: 600; padding: 8px 24px; }"
+            "QPushButton:hover { background: #5AABFF; }"
+            "QPushButton:disabled { background: #333333; color: #555555; }"
+        )
+        actions.addWidget(self.btn_convert)
+
+        self.btn_open = QPushButton("Mở Kết Quả")
+        self.btn_open.setEnabled(False)
+        self.btn_open.setMinimumHeight(38)
+        self.btn_open.setStyleSheet(
+            "QPushButton { background: transparent; border: 1px solid #4CAF50; "
+            "border-radius: 4px; color: #4CAF50; font-size: 12px; padding: 8px 16px; }"
+            "QPushButton:hover { background: rgba(76, 175, 80, 0.1); }"
+            "QPushButton:disabled { border-color: #333333; color: #444444; }"
+        )
+        actions.addWidget(self.btn_open)
+
+        top_layout.addLayout(actions)
+
+        # Progress bar
+        self.progress = QProgressBar()
+        self.progress.setFixedHeight(4)
+        self.progress.setRange(0, 100)
+        self.progress.setValue(0)
+        self.progress.setTextVisible(False)
+        self.progress.setVisible(False)
+        self.progress.setStyleSheet(
+            "QProgressBar { background: #2A2A2A; border: none; border-radius: 2px; }"
+            "QProgressBar::chunk { background: #4A9EFF; border-radius: 2px; }"
+        )
+        top_layout.addWidget(self.progress)
+
+        splitter.addWidget(top_widget)
+
+        # History section
+        history_widget = QWidget()
+        history_layout = QVBoxLayout(history_widget)
+        history_layout.setContentsMargins(0, 8, 0, 0)
+        history_layout.setSpacing(4)
+
+        history_header = QHBoxLayout()
+        history_lbl = QLabel("Nhật ký chuyển đổi")
+        history_lbl.setStyleSheet("color: #666666; font-size: 11px; font-weight: 600;")
+        history_header.addWidget(history_lbl)
+        history_header.addStretch()
+
+        clear_history_btn = QPushButton("Xóa")
+        clear_history_btn.setFixedSize(40, 18)
+        clear_history_btn.setStyleSheet(
+            "QPushButton { background: transparent; border: none; color: #555555; font-size: 10px; }"
+            "QPushButton:hover { color: #F44336; }"
+        )
+        clear_history_btn.clicked.connect(self._clear_history)
+        history_header.addWidget(clear_history_btn)
+        history_layout.addLayout(history_header)
+
+        self.history_container = QWidget()
+        self.history_layout = QVBoxLayout(self.history_container)
+        self.history_layout.setContentsMargins(0, 0, 0, 0)
+        self.history_layout.setSpacing(2)
+
+        history_scroll = QScrollArea()
+        history_scroll.setWidget(self.history_container)
+        history_scroll.setWidgetResizable(True)
+        history_scroll.setStyleSheet("QScrollArea { border: none; background: #1E1E1E; border-radius: 4px; }")
+        history_layout.addWidget(history_scroll)
+
+        splitter.addWidget(history_widget)
+        splitter.setSizes([400, 150])
+
+        root.addWidget(splitter)
 
         self.setCentralWidget(central)
 
         # Status bar
         self.status_bar = QStatusBar()
+        self.status_bar.setStyleSheet("QStatusBar { background: #1A1A1A; border-top: 1px solid #2A2A2A; }")
         self.setStatusBar(self.status_bar)
         self.status_label = QLabel()
-        self.status_label.setObjectName("statusLabel")
+        self.status_label.setStyleSheet("color: #666666; font-size: 11px;")
         self.status_bar.addWidget(self.status_label)
-        self.status_bar.addPermanentWidget(QLabel(f"v{app_version()}"))
+
+        # Load history items
+        self._refresh_history_ui()
 
     def _build_menu(self) -> None:
-        menu_bar = self.menuBar()
+        menu = self.menuBar()
 
-        # File menu
-        file_menu = menu_bar.addMenu("File")
-
-        open_action = QAction("Open Files...", self)
-        open_action.triggered.connect(self._pick_input)
-        file_menu.addAction(open_action)
-
+        file_menu = menu.addMenu("Tập Tin")
+        open_act = QAction("Mở File...", self)
+        open_act.triggered.connect(self._pick_files)
+        file_menu.addAction(open_act)
         file_menu.addSeparator()
+        exit_act = QAction("Thoát", self)
+        exit_act.triggered.connect(self.close)
+        file_menu.addAction(exit_act)
 
-        exit_action = QAction("Exit", self)
-        exit_action.triggered.connect(self.close)
-        file_menu.addAction(exit_action)
-
-        # Help menu
-        help_menu = menu_bar.addMenu("Help")
-
-        guide_action = QAction("Quick Start Guide", self)
-        guide_action.triggered.connect(lambda: self._show_welcome_forced())
-        help_menu.addAction(guide_action)
-
-        help_menu.addSeparator()
-
-        about_action = QAction("About", self)
-        about_action.triggered.connect(self._show_about)
-        help_menu.addAction(about_action)
-
-    def _show_help(self) -> None:
-        """Show quick help popup."""
-        self._show_welcome_forced()
-
-    def _show_welcome_forced(self) -> None:
-        """Show welcome dialog regardless of settings."""
-        dialog = WelcomeDialog(self._manager, self)
-        dialog.exec()
+        help_menu = menu.addMenu("Trợ Giúp")
+        guide_act = QAction("Bắt Đầu Nhanh", self)
+        guide_act.triggered.connect(lambda: WelcomeDialog(self._manager, self).exec())
+        help_menu.addAction(guide_act)
+        about_act = QAction("Thông Tin", self)
+        about_act.triggered.connect(self._show_about)
+        help_menu.addAction(about_act)
 
     def _show_about(self) -> None:
-        QMessageBox.about(
-            self,
-            "About MultiConvert",
-            f"MultiConvert v{app_version()}\n\n"
-            f"35+ input formats, 25+ output formats\n"
-            f"Powered by Pandoc, LibreOffice, and Tesseract OCR\n\n"
-            f"© {APP_COPYRIGHT}\n"
-            f"https://github.com/ngTwg/Convert"
-        )
-
-    # ═══════════════════════════════════════════════════════
-    #  EVENTS
-    # ═══════════════════════════════════════════════════════
+        QMessageBox.about(self, "Thông Tin", f"MultiConvert v{app_version()}\n\n{APP_COPYRIGHT}")
 
     def _bind_events(self) -> None:
-        self.btn_browse.clicked.connect(self._pick_input)
+        self.drop_zone.filesDropped.connect(self._add_files)
+        self.drop_zone.clicked.connect(self._pick_files)
+        self.browse_folder_btn.clicked.connect(self._pick_output_folder)
         self.btn_convert.clicked.connect(self._start_convert)
-        self.btn_open.clicked.connect(self._open_output)
+        self.btn_open.clicked.connect(self._open_last_result)
         self.btn_clear.clicked.connect(self._clear_files)
-        self.drop_zone.filesDropped.connect(self._handle_dropped_files)
 
     def _update_status(self) -> None:
-        """Update status bar with system info."""
         active = self._manager.active_converters()
-        count = len(self._manager.all_formats())
-        self.status_label.setText(f"Ready - {len(active)} converters, {count} formats supported")
+        self.status_label.setText(f"Sẵn sàng - {len(active)} bộ chuyển đổi")
 
-    # ═══════════════════════════════════════════════════════
-    #  FILE HANDLING
-    # ═══════════════════════════════════════════════════════
+    # ─── File handling ───────────────────────────────────────
 
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
         if event.mimeData().hasUrls():
@@ -560,196 +783,238 @@ class MainWindow(QMainWindow):
     def dropEvent(self, event: QDropEvent) -> None:
         paths = [url.toLocalFile() for url in event.mimeData().urls() if url.toLocalFile()]
         if paths:
-            self._handle_dropped_files(paths)
+            self._add_files(paths)
 
-    def _handle_dropped_files(self, paths: list[str]) -> None:
-        """Add files to the list."""
-        for path in paths:
+    def _pick_files(self) -> None:
+        files, _ = QFileDialog.getOpenFileNames(self, "Chọn files")
+        if files:
+            self._add_files(files)
+
+    def _pick_output_folder(self) -> None:
+        folder = QFileDialog.getExistingDirectory(self, "Chọn thư mục lưu", self._output_folder)
+        if folder:
+            self._output_folder = folder
+            self.folder_input.setText(folder)
+
+    def _add_files(self, paths: list[str]) -> None:
+        for p in paths:
+            path = str(Path(p).resolve())
             if path not in self._batch_files:
                 self._batch_files.append(path)
-                self._add_file_widget(path)
+                widget = FileItemWidget(path)
+                widget.removeClicked.connect(self._remove_file)
+                self._file_widgets[path] = widget
+                self.file_list_layout.addWidget(widget)
 
-        self._update_file_list_visibility()
+        self._update_ui_state()
 
-        # Auto-select output format based on first file
         if paths:
-            source_fmt = detect_format(paths[0])
-            if source_fmt:
-                outputs = sorted(self._manager.output_formats_for(source_fmt))
+            # Update default save folder if we just picked the first batch of files
+            if len(self._batch_files) == len(paths):
+                first_path = Path(paths[0]).resolve()
+                self._output_folder = str(first_path.parent)
+                self.folder_input.setText(self._output_folder)
+
+            fmt = detect_format(paths[0])
+            if fmt:
+                outputs = sorted(self._manager.output_formats_for(fmt))
                 if outputs:
                     self.target_combo.clear()
                     self.target_combo.addItems(outputs)
                     if "pdf" in outputs:
                         self.target_combo.setCurrentText("pdf")
 
-    def _add_file_widget(self, file_path: str) -> None:
-        """Add a file item widget."""
-        widget = FileItemWidget(file_path)
-        widget.removeClicked.connect(self._remove_file)
-        self._file_widgets[file_path] = widget
-
-        # Insert before the stretch
-        self.file_list_layout.insertWidget(self.file_list_layout.count() - 1, widget)
-
-    def _remove_file(self, file_path: str) -> None:
-        """Remove a file from the list."""
-        if file_path in self._batch_files:
-            self._batch_files.remove(file_path)
-        if file_path in self._file_widgets:
-            widget = self._file_widgets.pop(file_path)
-            widget.deleteLater()
-        self._update_file_list_visibility()
+    def _remove_file(self, raw_path: str) -> None:
+        path = str(Path(raw_path).resolve())
+        if path in self._batch_files:
+            self._batch_files.remove(path)
+        if path in self._file_widgets:
+            self._file_widgets[path].deleteLater()
+            del self._file_widgets[path]
+        self._update_ui_state()
 
     def _clear_files(self) -> None:
-        """Clear all files."""
         self._batch_files.clear()
-        for widget in self._file_widgets.values():
-            widget.deleteLater()
+        for w in self._file_widgets.values():
+            w.deleteLater()
         self._file_widgets.clear()
-        self._update_file_list_visibility()
-        self._last_result = None
+        self._update_ui_state()
         self.btn_open.setEnabled(False)
 
-    def _update_file_list_visibility(self) -> None:
-        """Show/hide file list based on file count."""
+    def _update_ui_state(self) -> None:
         has_files = len(self._batch_files) > 0
         self.file_scroll.setVisible(has_files)
         self.btn_clear.setVisible(has_files)
-        self.status_label.setText(
-            f"{len(self._batch_files)} file(s) selected" if has_files else "Ready"
-        )
+        if has_files:
+            self.status_label.setText(f"Đã chọn {len(self._batch_files)} file")
+        else:
+            self._update_status()
 
-    def _pick_input(self) -> None:
-        """Open file picker."""
-        selected, _ = QFileDialog.getOpenFileNames(self, "Select files to convert")
-        if selected:
-            self._handle_dropped_files(selected)
-
-    # ═══════════════════════════════════════════════════════
-    #  CONVERSION
-    # ═══════════════════════════════════════════════════════
+    # ─── Conversion ──────────────────────────────────────────
 
     def _start_convert(self) -> None:
-        """Start conversion process."""
         if not self._batch_files:
-            QMessageBox.warning(self, "No Files", "Please select files to convert first.")
+            QMessageBox.warning(self, "Chưa có File", "Vui lòng thêm file trước.")
             return
 
-        target_fmt = self.target_combo.currentText().strip()
-        if not target_fmt:
-            QMessageBox.warning(self, "No Format", "Please select an output format.")
+        target = self.target_combo.currentText()
+        if not target:
             return
 
-        self._set_converting_state(True)
-        self.overall_progress.setVisible(True)
-        self.overall_progress.setValue(0)
+        self._converting = True
+        self._completed_count = 0
+        self._total_count = len(self._batch_files)
 
-        # Prepare requests
+        self.btn_convert.setEnabled(False)
+        self.btn_convert.setText("Đang chuyển đổi...")
+        self.progress.setVisible(True)
+        self.progress.setValue(0)
+
+        # Build requests
         requests = []
-        for src_text in self._batch_files:
-            src = Path(src_text)
-            dst = src.with_name(f"{src.stem}_converted.{target_fmt}")
+        output_folder = self._output_folder or None
+
+        for path in self._batch_files:
+            src = Path(path)
+            if output_folder:
+                dst = Path(output_folder) / f"{src.stem}_converted.{target}"
+            else:
+                dst = src.with_name(f"{src.stem}_converted.{target}")
+
             requests.append(ConversionRequest(
                 source=src,
                 destination=dst,
-                target_format=target_fmt,
-                options=self._build_options(),
+                target_format=target,
+                options={"force_ocr": self.chk_ocr.isChecked(), "ocr_lang": "vie+eng"} if self.chk_ocr.isChecked() else {},
             ))
-            # Reset file widget state
-            if src_text in self._file_widgets:
-                self._file_widgets[src_text].set_converting()
 
+            if path in self._file_widgets:
+                self._file_widgets[path].set_converting()
+
+        # Start worker
         from multiconvert.ui.worker import BatchConvertWorker
         self._thread = QThread(self)
-        self._batch_worker = BatchConvertWorker(self._manager, requests)
-        self._batch_worker.moveToThread(self._thread)
+        self._worker = BatchConvertWorker(self._manager, requests)
+        self._worker.moveToThread(self._thread)
 
-        self._thread.started.connect(self._batch_worker.run)
-        self._batch_worker.file_progress.connect(self._on_file_progress)
-        self._batch_worker.file_complete.connect(self._on_file_complete)
-        self._batch_worker.file_error.connect(self._on_file_error)
-        self._batch_worker.progress.connect(self._on_overall_progress)
-        self._batch_worker.batch_finished.connect(self._on_batch_finished)
-
-        self._batch_worker.done.connect(self._thread.quit)
-        self._batch_worker.done.connect(self._batch_worker.deleteLater)
+        self._thread.started.connect(self._worker.run)
+        self._worker.file_progress.connect(self._on_file_progress)
+        self._worker.file_complete.connect(self._on_file_complete)
+        self._worker.file_error.connect(self._on_file_error)
+        self._worker.progress.connect(self._on_progress)
+        self._worker.batch_finished.connect(self._on_batch_done)
+        self._worker.done.connect(self._thread.quit)
+        self._worker.done.connect(self._worker.deleteLater)
         self._thread.finished.connect(self._thread.deleteLater)
-        self._thread.finished.connect(lambda: self._set_converting_state(False))
+        self._thread.finished.connect(self._on_thread_done)
 
         self._thread.start()
 
-    def _build_options(self) -> dict:
-        options: dict[str, object] = {}
-        if self.chk_ocr.isChecked():
-            options["force_ocr"] = True
-            options["ocr_lang"] = "vie+eng"
-        return options
+    def _on_file_progress(self, path: str, value: int) -> None:
+        path = str(Path(path).resolve())
+        if path in self._file_widgets:
+            self._file_widgets[path].set_progress(value)
 
-    def _set_converting_state(self, converting: bool) -> None:
-        self.btn_convert.setEnabled(not converting)
-        self.btn_browse.setEnabled(not converting)
-        self.btn_clear.setEnabled(not converting)
-        self.target_combo.setEnabled(not converting)
+    def _on_file_complete(self, source: str, output: str) -> None:
+        source = str(Path(source).resolve())
+        if source in self._file_widgets:
+            self._file_widgets[source].set_complete(output)
 
-        if converting:
-            self.btn_convert.setText("Converting...")
-            self.status_label.setText("Converting files...")
-        else:
-            self.btn_convert.setText("Convert")
-            self.overall_progress.setVisible(False)
+        self._completed_count += 1
+        self._last_output = output
 
-    def _on_file_progress(self, file_path: str, progress: int) -> None:
-        """Update individual file progress."""
-        if file_path in self._file_widgets:
-            self._file_widgets[file_path].set_progress(progress)
-
-    def _on_file_complete(self, file_path: str, output_path: str) -> None:
-        """Mark file as complete."""
-        if file_path in self._file_widgets:
-            self._file_widgets[file_path].set_complete()
-        self._last_result = ConversionResult(destination=Path(output_path), route=[])
-
-    def _on_file_error(self, file_path: str, error: str) -> None:
-        """Mark file as failed."""
-        if file_path in self._file_widgets:
-            self._file_widgets[file_path].set_error(error)
-
-    def _on_overall_progress(self, current: int, total: int) -> None:
-        """Update overall progress bar."""
-        percent = int((current / total) * 100) if total > 0 else 0
-        self.overall_progress.setValue(percent)
-        self.status_label.setText(f"Converting {current}/{total}...")
-
-    def _on_batch_finished(self, success: int, total: int, failed_list: list) -> None:
-        """Handle batch completion."""
-        if success == total:
-            self.status_label.setText(f"Done! {success} file(s) converted successfully")
-            self.btn_open.setEnabled(True)
-            if self.chk_open_after.isChecked() and self._last_result:
-                self._open_path(self._last_result.destination)
-        else:
-            self.status_label.setText(f"Completed: {success}/{total} successful, {len(failed_list)} failed")
-            if success > 0:
-                self.btn_open.setEnabled(True)
-
-    # ═══════════════════════════════════════════════════════
-    #  POST-ACTIONS
-    # ═══════════════════════════════════════════════════════
-
-    def _open_output(self) -> None:
-        """Open the last converted file."""
-        if self._last_result and self._last_result.destination.exists():
-            self._open_path(self._last_result.destination)
-        else:
-            QMessageBox.warning(self, "File Not Found", "The converted file was not found.")
-
-    @staticmethod
-    def _open_path(path: Path) -> None:
-        """Open file with default system application."""
+        # Add to history
         try:
+            size_kb = Path(output).stat().st_size / 1024
+        except Exception:
+            size_kb = 0
+
+        self._history.insert(0, {
+            "time": datetime.now().strftime("%H:%M"),
+            "source": source,
+            "output": output,
+            "size_kb": size_kb,
+        })
+        self._history = self._history[:50]  # Keep last 50
+        self._save_history()
+        self._refresh_history_ui()
+
+    def _on_file_error(self, path: str, error: str) -> None:
+        path = str(Path(path).resolve())
+        if path in self._file_widgets:
+            self._file_widgets[path].set_error(error)
+
+    def _on_progress(self, current: int, total: int) -> None:
+        percent = int((current / total) * 100) if total > 0 else 0
+        self.progress.setValue(percent)
+        self.status_label.setText(f"Đang chuyển đổi {current}/{total}...")
+
+    def _on_batch_done(self, success: int, total: int, failed: list) -> None:
+        self.status_label.setText(f"Hoàn tất: {success}/{total} file")
+        # Reset button state immediately when batch is done
+        self._converting = False
+        self.btn_convert.setEnabled(True)
+        self.btn_convert.setText("Chuyển đổi")
+        self.progress.setVisible(False)
+
+        if success > 0:
+            self.btn_open.setEnabled(True)
+            if self.chk_open.isChecked() and hasattr(self, "_last_output"):
+                self._open_file(self._last_output)
+
+    def _on_thread_done(self) -> None:
+        self._converting = False
+        self.btn_convert.setEnabled(True)
+        self.btn_convert.setText("Chuyển đổi")
+        self.progress.setVisible(False)
+
+    def _open_last_result(self) -> None:
+        if hasattr(self, "_last_output"):
+            self._open_file(self._last_output)
+
+    def _open_file(self, path: str) -> None:
+        p = Path(path)
+        if p.exists():
             if os.name == "nt":
-                os.startfile(path)  # type: ignore[attr-defined]
+                os.startfile(p)
             else:
-                subprocess.run(["xdg-open", str(path)], check=False)
-        except Exception as e:
-            pass  # Silently fail
+                subprocess.run(["xdg-open", str(p)], check=False)
+
+    # ─── History ─────────────────────────────────────────────
+
+    def _load_history(self) -> None:
+        try:
+            data = self._settings.value("history", "[]")
+            self._history = json.loads(data) if data else []
+        except Exception:
+            self._history = []
+
+    def _save_history(self) -> None:
+        self._settings.setValue("history", json.dumps(self._history))
+
+    def _clear_history(self) -> None:
+        self._history.clear()
+        self._save_history()
+        self._refresh_history_ui()
+
+    def _refresh_history_ui(self) -> None:
+        # Clear old
+        while self.history_layout.count():
+            item = self.history_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+            elif item.spacerItem():
+                pass # Already removed from layout by takeAt
+
+        # Add new
+        for entry in self._history[:20]:
+            widget = HistoryItem(entry)
+            self.history_layout.addWidget(widget)
+
+        if not self._history:
+            lbl = QLabel("Chưa có nhật ký")
+            lbl.setStyleSheet("color: #444444; font-size: 11px; padding: 16px;")
+            lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.history_layout.addWidget(lbl)
+
+        self.history_layout.addStretch()

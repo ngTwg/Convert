@@ -108,9 +108,27 @@ class PandocConverter(BaseConverter):
 
         destination.parent.mkdir(parents=True, exist_ok=True)
 
+        temp_source = None
+        temp_lua = None
+        current_source = source
+
+        # Fix encoding issues for text formats (Pandoc requires UTF-8)
+        if source_format in {"md", "txt", "markdown", "csv", "html", "json"}:
+            try:
+                source.read_text(encoding="utf-8")
+            except UnicodeDecodeError:
+                text = source.read_text(encoding="cp1258", errors="replace")
+                import tempfile
+                import os
+                fd, path = tempfile.mkstemp(suffix=f".{source_format}")
+                os.close(fd)
+                temp_source = Path(path)
+                temp_source.write_text(text, encoding="utf-8")
+                current_source = temp_source
+
         command = [
             self._pandoc or "pandoc",
-            str(source),
+            str(current_source),
             "-f", self._pandoc_format(source_format, is_input=True),
             "-t", self._pandoc_format(target_format, is_input=False),
             "-o", str(destination),
@@ -122,24 +140,59 @@ class PandocConverter(BaseConverter):
         if target_format in standalone_formats:
             command.append("--standalone")
 
-        # Fix for abnormal bold text: use proper markdown extensions
+        # Fix for abnormal bold/heading: use more restrictive markdown
         if source_format in {"md", "txt", "markdown"}:
-            # Disable extensions that might cause unexpected bold
-            command[command.index("-f") + 1] = "markdown-smart-auto_identifiers"
+            # Use gfm (GitHub Flavored Markdown) to integrate better Markdown logic like the requested VS Code extension
+            command[command.index("-f") + 1] = "gfm"
+            
+            # Strip bold, italic, and heading sizes to make the text plain as requested
+            lua_code = """
+function Header(el)
+    return pandoc.Para(el.content)
+end
+function Strong(el)
+    return el.content
+end
+function Emph(el)
+    return el.content
+end
+"""
+            import tempfile
+            import os
+            fd, lua_path = tempfile.mkstemp(suffix=".lua")
+            os.close(fd)
+            Path(lua_path).write_text(lua_code, encoding="utf-8")
+            temp_lua = Path(lua_path)
+            command.append(f"--lua-filter={temp_lua}")
 
-        # DOCX-specific: wrap text properly
+        # DOCX-specific: use reference doc style if available
         if target_format == "docx":
-            command.extend(["--wrap", "auto"])
+            command.extend(["--wrap", "preserve"])
 
-        # HTML-specific: use clean output
+        # HTML-specific: minimal output
         if target_format == "html":
+            command.extend(["--wrap", "preserve"])
+
+        # TXT output: use plain text
+        if target_format == "txt":
+            command[command.index("-t") + 1] = "plain"
             command.extend(["--wrap", "none"])
 
         if target_format == "pdf":
-            # Pick available PDF engine
-            for engine in ("xelatex", "pdflatex", "lualatex", "wkhtmltopdf"):
+            # Pick available PDF engine - prefer xelatex for UTF-8/Vietnamese support
+            for engine in ("xelatex", "lualatex", "pdflatex", "wkhtmltopdf"):
                 if shutil.which(engine):
                     command.append(f"--pdf-engine={engine}")
+                    # xelatex/lualatex handle UTF-8 natively with proper fonts
+                    if engine in ("xelatex", "lualatex"):
+                        # Use fonts with good Vietnamese character support
+                        command.extend([
+                            "-V", "mainfont=Times New Roman",
+                            "-V", "sansfont=Arial",
+                            "-V", "monofont=Consolas",
+                            "-V", "mathfont=Cambria Math",
+                            "-V", "CJKmainfont=Arial Unicode MS",
+                        ])
                     break
             else:
                 # Fallback to user-specified
@@ -150,7 +203,20 @@ class PandocConverter(BaseConverter):
             if template:
                 command.extend(["--template", str(template)])
 
-        run_command(command)
+        try:
+            run_command(command)
+        finally:
+            import os
+            if temp_source and temp_source.exists():
+                try:
+                    os.unlink(temp_source)
+                except OSError:
+                    pass
+            if temp_lua and temp_lua.exists():
+                try:
+                    os.unlink(temp_lua)
+                except OSError:
+                    pass
 
     @staticmethod
     def _pandoc_format(fmt: str, is_input: bool = False) -> str:
