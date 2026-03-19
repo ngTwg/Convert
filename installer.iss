@@ -63,6 +63,7 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 
 [Code]
 var
+  AboutPage: TOutputMsgMemoWizardPage;
   DependencyPage: TOutputMsgMemoWizardPage;
   LibreOfficeInstalled: Boolean;
   TesseractInstalled: Boolean;
@@ -87,7 +88,24 @@ end;
 
 procedure InitializeWizard;
 begin
-  DependencyPage := CreateOutputMsgMemoPage(wpWelcome,
+  AboutPage := CreateOutputMsgMemoPage(wpWelcome,
+    'Giới thiệu / About MultiConvert',
+    'Thông tin phần mềm / Application Information',
+    'MultiConvert là công cụ chuyển đổi tài liệu đa định dạng cho Windows.' + #13#10 + #13#10 +
+    'MultiConvert is a multi-format document converter for Windows.' + #13#10 + #13#10,
+    '');
+
+  AboutPage.RichEditViewer.Lines.Add('Tên ứng dụng / Application: MultiConvert');
+  AboutPage.RichEditViewer.Lines.Add('Phiên bản / Version: {#MyAppVersion}');
+  AboutPage.RichEditViewer.Lines.Add('Bản quyền / Copyright: Lê Ngọc Tường - Đại học Khoa học Tự nhiên (HCMUS)');
+  AboutPage.RichEditViewer.Lines.Add('Trang dự án / Project: {#MyAppURL}');
+  AboutPage.RichEditViewer.Lines.Add('');
+  AboutPage.RichEditViewer.Lines.Add('Tính năng chính / Highlights:');
+  AboutPage.RichEditViewer.Lines.Add('- Chuyển đổi 19 định dạng đầu vào sang 9 định dạng đầu ra');
+  AboutPage.RichEditViewer.Lines.Add('- Bộ chuyển đổi đa engine: Pandoc, LibreOffice, OCR');
+  AboutPage.RichEditViewer.Lines.Add('- Hỗ trợ chỉnh sửa văn bản trong ứng dụng');
+
+  DependencyPage := CreateOutputMsgMemoPage(AboutPage.ID,
     'Kiểm Tra Phụ Thuộc / Dependency Check',
     'Công cụ chuyển đổi bổ sung / Optional Conversion Engines',
     'MultiConvert có thể hoạt động với các bộ chuyển đổi sau để mở rộng khả năng:' + #13#10 + #13#10 +

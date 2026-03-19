@@ -5,12 +5,13 @@ batch processing, progress bar, and inline status.
 """
 from __future__ import annotations
 
+import importlib.metadata
 import os
 import subprocess
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QSize, QThread, Signal
-from PySide6.QtGui import QDragEnterEvent, QDropEvent, QFont, QIcon
+from PySide6.QtGui import QAction, QDragEnterEvent, QDropEvent, QFont, QIcon
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -55,6 +56,13 @@ ICON_BATCH    = "📚"
 ICON_REMOVE   = "✕"
 
 APP_COPYRIGHT = "Lê Ngọc Tường - Đại học Khoa học Tự nhiên (HCMUS)"
+
+
+def app_version() -> str:
+    try:
+        return importlib.metadata.version("multiconvert")
+    except importlib.metadata.PackageNotFoundError:
+        return "0.1.0"
 
 
 class DropZone(QFrame):
@@ -127,6 +135,7 @@ class MainWindow(QMainWindow):
         self.setAcceptDrops(True)
 
         self._build_ui()
+        self._build_menu()
         self._bind_events()
         self._detect_engines()
 
@@ -147,7 +156,7 @@ class MainWindow(QMainWindow):
         title.setObjectName("titleLabel")
         header.addWidget(title)
         header.addStretch()
-        version_label = QLabel("v0.1.0")
+        version_label = QLabel(f"v{app_version()}")
         version_label.setObjectName("subtitleLabel")
         header.addWidget(version_label)
         root.addLayout(header)
@@ -286,6 +295,32 @@ class MainWindow(QMainWindow):
         self.engine_status = QLabel()
         self.engine_status.setObjectName("statusLabel")
         self.status_bar.addPermanentWidget(self.engine_status)
+
+    def _build_menu(self) -> None:
+        help_menu = self.menuBar().addMenu("Trợ giúp")
+
+        about_action = QAction("Giới thiệu", self)
+        about_action.triggered.connect(self._show_about_dialog)
+        help_menu.addAction(about_action)
+
+    def _show_about_dialog(self) -> None:
+        QMessageBox.information(
+            self,
+            "Giới thiệu MultiConvert",
+            "\n".join(
+                [
+                    "MultiConvert",
+                    f"Version: {app_version()}",
+                    f"Copyright: {APP_COPYRIGHT}",
+                    "Project: https://github.com/ngTwg/Convert",
+                    "",
+                    "Features:",
+                    "- 19 input formats, 9 output formats",
+                    "- Smart routing with Pandoc/LibreOffice/OCR",
+                    "- Batch conversion and in-app editor",
+                ]
+            ),
+        )
 
     # ═══════════════════════════════════════════════════════
     #  EVENTS
