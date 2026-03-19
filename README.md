@@ -8,7 +8,7 @@
 ## ✨ Features
 
 ### 🔄 Multi-Format Conversion
-- **Input**: MD, RST, TXT, HTML, DOCX, DOC, ODT, RTF, EPUB, PDF, PNG, JPG, TIF, BMP
+- **Input**: MD, RST, TXT, HTML, DOCX, DOC, ODT, RTF, EPUB, PDF, PNG, JPG, TIF, BMP, GIF, WEBP
 - **Output**: MD, TXT, HTML, DOCX, ODT, RTF, EPUB, PDF, CSV
 - **Auto-routing**: If no direct converter exists (e.g., `md→pdf`), automatically chains through intermediates (`md→html→pdf`)
 
@@ -96,25 +96,54 @@ python main.py --list-formats
 
 ---
 
-## Hướng dẫn Đóng gói và Phát hành (Release Guide)
+## 🎁 Hướng dẫn Đóng gói và Phát hành (Release Guide)
 
-Để đóng gói ứng dụng thành file `.exe` sử dụng ngay (không cần cài đặt Python), bạn hãy chạy đoạn mã lệnh PowerShell sau:
+### Phương pháp 1: Tạo Windows Installer (KHUYẾN NGHỊ) ⭐
+
+**Tạo file cài đặt chuyên nghiệp như các ứng dụng Windows khác:**
+
+```powershell
+powershell -ExecutionPolicy Bypass -File build_installer.ps1 -UseVenv
+```
+
+**Yêu cầu tiên quyết:**
+- Cài đặt [Inno Setup](https://jrsoftware.org/isdl.php) (miễn phí)
+
+**Quá trình thực hiện:**
+1. Tự động build file `MultiConvert.exe` từ source code
+2. Tạo Windows Installer (file `.exe`) với giao diện cài đặt chuyên nghiệp
+3. Hỗ trợ song ngữ Việt-Anh trong quá trình cài đặt
+4. Tự động kiểm tra và thông báo về LibreOffice & Tesseract OCR
+5. Tạo shortcut trên Desktop và Start Menu
+6. Cài đặt uninstaller tự động
+
+**Kết quả:**
+- File installer: `installer_output/MultiConvert_Setup_v1.0.0.exe`
+- Người dùng chỉ cần **tải file .exe và chạy** → cài đặt như app bình thường!
+- Nhấp đúp 2 lần → hiện giao diện cài đặt → Next → Install → Done!
+
+---
+
+### Phương pháp 2: Portable ZIP (Không cần cài đặt)
+
+Nếu muốn phân phối dạng ZIP portable (giải nén và chạy):
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File build_exe.ps1 -UseVenv
 ```
 
 **Quá trình này sẽ thực hiện:**
-1. Tạo một môi trường ảo (`build_venv`) sạch sẽ, giúp giảm dung lượng của file exe (từ 1.3GB xuống còn khoảng >900MB).
-2. Tự động gom các thư viện cần thiết như Pandoc, bộ giao diện PySide6 WebEngine.
-3. Tạo file `MultiConvert.exe` (đã giấu bảng cmd bằng `--windowed`) có kèm icon logo.
-4. Xuất file hướng dẫn `README.txt` để hỗ trợ người dùng cuối.
+1. Tạo một môi trường ảo (`build_venv`) sạch sẽ, giảm dung lượng (từ 1.3GB → ~900MB)
+2. Tự động gom các thư viện cần thiết như Pandoc, bộ giao diện PySide6 WebEngine
+3. Tạo file `MultiConvert.exe` (đã giấu console window) có kèm icon logo
+4. Xuất file hướng dẫn `README.txt` để hỗ trợ người dùng cuối
 
-**Output (Kết quả xuất ra):**
-Toàn bộ phần mềm sẽ được đặt trong thư mục `dist\MultiConvert\`.
-Bạn có thể nén toàn bộ thư mục `MultiConvert` này lại bằng WinRAR / ZIP và gửi cho người dùng. Người dùng chỉ việc giải nén và nhấp đúp vào `MultiConvert.exe` để chạy.
+**Output:**
+- Toàn bộ phần mềm trong thư mục `dist\MultiConvert\`
+- Nén thành ZIP và gửi cho người dùng
+- Người dùng giải nén và nhấp đúp `MultiConvert.exe`
 
->Lưu ý: Thư mục `_internal/` chứa các thư viện và code bắt buộc và phải nằm cùng thư mục gốc với file `.exe`. Mọi tệp trong đây không được xoá. 
+>**Lưu ý:** Thư mục `_internal/` chứa thư viện bắt buộc, phải nằm cùng thư mục với file `.exe`
 
 ---
 
@@ -122,24 +151,35 @@ Bạn có thể nén toàn bộ thư mục `MultiConvert` này lại bằng WinR
 
 Tool tự động kèm theo Pandoc. Tuy nhiên, một số định dạng sau cần cài thêm Engine:
 
-1. **PDF dạng Scan / Hình ảnh (JPG, PNG) ra Chữ:**
-   - Yêu cầu người dùng (hoặc bạn có thể đính kèm bộ cài) **Tesseract OCR**. Cài đặt ở thư mục mặc định `C:\Program Files\Tesseract-OCR`. 
-   - MultiConvert sẽ tự động nhận diện và ghép Engine.
-   
+1. **PDF dạng Scan / Hình ảnh (JPG, PNG, GIF, WEBP) ra Chữ:**
+   - Yêu cầu người dùng cài **Tesseract OCR**: https://github.com/UB-Mannheim/tesseract/wiki
+   - Cài đặt ở thư mục mặc định `C:\Program Files\Tesseract-OCR`
+   - MultiConvert sẽ tự động nhận diện và sử dụng
+   - **Windows Installer tự động kiểm tra và thông báo** nếu chưa cài
+
 2. **Word (DOC, DOCX), Excel (XLSX, CSV) ra PDF:**
-   - MultiConvert dùng **LibreOffice** để xử lý không lỗi font. Người dùng cần cài sẵn phần mềm LibreOffice trong máy (máy tính phổ thông nào cũng nên cài).
+   - MultiConvert dùng **LibreOffice** để xử lý chuyển đổi Office formats
+   - Tải tại: https://www.libreoffice.org/
+   - **Windows Installer tự động kiểm tra và thông báo** nếu chưa cài
 
 ---
 
-## 📦 Build .exe
+## 📦 Build Commands Quick Reference
 
 ```powershell
-pip install pyinstaller
-.\build_exe.ps1           # folder build (recommended)
-.\build_exe.ps1 -OneFile  # single .exe (slower startup)
+# Build Windows Installer (recommended for distribution)
+.\build_installer.ps1 -UseVenv
+
+# Build portable EXE only
+.\build_exe.ps1 -UseVenv
+
+# Build installer without rebuilding EXE (if already built)
+.\build_installer.ps1 -SkipBuild
 ```
 
-Output: `dist/MultiConvert/`
+**Output Locations:**
+- EXE: `dist/MultiConvert/MultiConvert.exe`
+- Installer: `installer_output/MultiConvert_Setup_v1.0.0.exe`
 
 ---
 

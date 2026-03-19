@@ -8,4 +8,20 @@ dist/
 .pytest_cache/
 .venv/
 venv/
+build_venv/
 temp/
+*.egg-info/
+.mypy_cache/
+
+# Installer output
+installer_output/
+
+# Executables
+*.exe
+*.msi
+
+# Temporary files
+*.log
+*.tmp
+*.temp
+~*

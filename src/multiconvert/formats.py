@@ -24,6 +24,8 @@ EXT_TO_FORMAT: dict[str, str] = {
     ".tif": "tif",
     ".tiff": "tif",
     ".bmp": "bmp",
+    ".gif": "gif",
+    ".webp": "webp",
 }
 
 FORMAT_ALIASES: dict[str, str] = {
