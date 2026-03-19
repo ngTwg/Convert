@@ -86,8 +86,13 @@ def run_gui(plugin_dir: Path | None = None) -> int:
         return 2
 
     from multiconvert.ui.main_window import MainWindow
+    from multiconvert.ui.theme import DARK_THEME_QSS
 
     app = QApplication(sys.argv)
+
+    # apply premium dark theme
+    app.setStyleSheet(DARK_THEME_QSS)
+
     manager = build_manager(plugin_dir)
     window = MainWindow(manager)
     window.show()

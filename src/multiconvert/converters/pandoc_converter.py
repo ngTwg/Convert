@@ -20,6 +20,15 @@ class PandocConverter(BaseConverter):
             env_var="MULTICONVERT_PANDOC",
             portable_subpath="tools/pandoc/pandoc.exe",
         )
+        # Fallback: use pypandoc_binary bundled pandoc
+        if not self._pandoc:
+            try:
+                import pypandoc
+                bundled = pypandoc.get_pandoc_path()
+                if bundled:
+                    self._pandoc = str(bundled)
+            except Exception:
+                pass
 
     def supported_pairs(self) -> set[tuple[str, str]]:
         pairs: set[tuple[str, str]] = set()
