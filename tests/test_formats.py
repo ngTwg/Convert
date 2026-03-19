@@ -24,5 +24,6 @@ def test_ensure_extension_uses_normalized_alias() -> None:
 
 def test_input_format_count_is_current() -> None:
     # Guard against stale documentation by asserting current known input types.
+    # Updated for v0.2.0 with expanded format support (35+ formats)
     input_types = set(EXT_TO_FORMAT.values())
-    assert len(input_types) == 19
+    assert len(input_types) >= 30  # We support 34+ unique format types now

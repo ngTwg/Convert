@@ -39,14 +39,14 @@ def _get_tessdata_dir() -> str | None:
 class OcrConverter(BaseConverter):
     """Extract text from scanned PDFs and images using Tesseract OCR.
 
-    Input: pdf (scanned), jpg, jpeg, png, tif, tiff, bmp, gif, webp
+    Input: pdf (scanned), jpg, jpeg, png, tif, tiff, bmp, gif, webp, ico, heic
     Output: txt, md, html, docx
     """
 
     name = "ocr"
     priority = 20
 
-    _input_formats = {"pdf", "jpg", "png", "tif", "bmp", "gif", "webp"}
+    _input_formats = {"pdf", "jpg", "png", "tif", "bmp", "gif", "webp", "ico", "heic"}
     _output_formats = {"txt", "md", "html", "docx"}
 
     def __init__(self) -> None:

@@ -1,7 +1,7 @@
 # MultiConvert 🔄
 
 > **Premium desktop file converter & editor for Windows**
-> Convert between 19 input formats and 9 output formats with high quality • Edit output in-app • Batch processing
+> Convert between 35+ input formats and 25+ output formats with high quality • Edit output in-app • Batch processing
 
 [Đọc bản Tiếng Việt 🇻🇳](README_VI.md)
 
@@ -20,8 +20,15 @@
 ## ✨ Features
 
 ### 🔄 Multi-Format Conversion
-- **Input (19)**: MD, RST, TXT, HTML, DOCX, DOC, ODT, RTF, EPUB, PDF, PPTX, XLSX, CSV, JPG, PNG, TIF, BMP, GIF, WEBP
-- **Output**: MD, TXT, HTML, DOCX, ODT, RTF, EPUB, PDF, CSV
+- **Input (35+)**:
+  - **Documents**: MD, RST, TXT, HTML, DOCX, DOC, ODT, RTF, EPUB, PDF, PPTX, XLSX, CSV
+  - **Markup**: LaTeX/TEX, Org, AsciiDoc, MediaWiki, Textile, OPML, FB2, Jira
+  - **Code/Data**: JSON, Jupyter (IPYNB), Man pages, T2T, TWiki, TikiWiki
+  - **Images (OCR)**: JPG, PNG, TIF, BMP, GIF, WEBP, ICO, HEIC
+- **Output (25+)**:
+  - **Documents**: MD, TXT, HTML, DOCX, ODT, RTF, EPUB, PDF, CSV
+  - **Markup**: LaTeX, Org, AsciiDoc, MediaWiki, Textile, OPML, FB2, JSON
+  - **Presentations**: PPTX, Reveal.js, DZSlides, Slideous, Slidy, S5
 - **Auto-routing**: If no direct converter exists (e.g., `md→pdf`), automatically chains through intermediates (`md→html→pdf`)
 
 ### ✏️ In-App WYSIWYG Editor
@@ -255,17 +262,40 @@ Then pass `--plugin-dir ./plugins` to load them.
 
 ## 📊 Format Compatibility Matrix
 
-| From \ To | md | txt | html | docx | odt | rtf | epub | pdf |
-|-----------|:--:|:---:|:----:|:----:|:---:|:---:|:----:|:---:|
-| **md**    | -  | ✅  | ✅   | ✅   | ✅  | ✅  | ✅   | ✅  |
-| **txt**   | ✅ | -   | ✅   | ✅   | ✅  | ✅  | ✅   | ✅  |
-| **html**  | ✅ | ✅  | -    | ✅   | ✅  | ✅  | ✅   | ✅  |
-| **docx**  | ✅ | ✅  | ✅   | -    | ✅  | ✅  | ✅   | ✅  |
-| **odt**   | ✅ | ✅  | ✅   | ✅   | -   | ✅  | ✅   | ✅  |
-| **rtf**   | ✅ | ✅  | ✅   | ✅   | ✅  | -   | ✅   | ✅  |
-| **epub**  | ✅ | ✅  | ✅   | ✅   | ✅  | ✅  | -    | ✅  |
-| **pdf***  | ✅ | ✅  | ✅   | ✅   | ✅  | ✅  | ✅   | -   |
-| **images**| ✅ | ✅  | ✅   | ✅   |     |     |      |     |
+### Document Formats
+| From \ To | md | txt | html | docx | odt | rtf | epub | pdf | latex |
+|-----------|:--:|:---:|:----:|:----:|:---:|:---:|:----:|:---:|:-----:|
+| **md**    | -  | ✅  | ✅   | ✅   | ✅  | ✅  | ✅   | ✅  | ✅    |
+| **txt**   | ✅ | -   | ✅   | ✅   | ✅  | ✅  | ✅   | ✅  | ✅    |
+| **html**  | ✅ | ✅  | -    | ✅   | ✅  | ✅  | ✅   | ✅  | ✅    |
+| **docx**  | ✅ | ✅  | ✅   | -    | ✅  | ✅  | ✅   | ✅  | ✅    |
+| **odt**   | ✅ | ✅  | ✅   | ✅   | -   | ✅  | ✅   | ✅  | ✅    |
+| **rtf**   | ✅ | ✅  | ✅   | ✅   | ✅  | -   | ✅   | ✅  | ✅    |
+| **epub**  | ✅ | ✅  | ✅   | ✅   | ✅  | ✅  | -    | ✅  | ✅    |
+| **pdf***  | ✅ | ✅  | ✅   | ✅   | ✅  | ✅  | ✅   | -   |       |
+| **latex** | ✅ | ✅  | ✅   | ✅   | ✅  | ✅  | ✅   | ✅  | -     |
+
+### Markup/Wiki Formats
+| From \ To | md | html | org | asciidoc | mediawiki | textile | fb2 | json |
+|-----------|:--:|:----:|:---:|:--------:|:---------:|:-------:|:---:|:----:|
+| **org**       | ✅ | ✅   | -   | ✅       | ✅        | ✅      | ✅  | ✅   |
+| **asciidoc**  | ✅ | ✅   | ✅  | -        | ✅        | ✅      | ✅  | ✅   |
+| **mediawiki** | ✅ | ✅   | ✅  | ✅       | -         | ✅      | ✅  | ✅   |
+| **textile**   | ✅ | ✅   | ✅  | ✅       | ✅        | -       | ✅  | ✅   |
+| **fb2**       | ✅ | ✅   | ✅  | ✅       | ✅        | ✅      | -   | ✅   |
+| **ipynb**     | ✅ | ✅   | ✅  | ✅       | ✅        | ✅      | ✅  | ✅   |
+| **json**      | ✅ | ✅   | ✅  | ✅       | ✅        | ✅      | ✅  | -    |
+
+### Image OCR → Text
+| From     | txt | md | html | docx |
+|----------|:---:|:--:|:----:|:----:|
+| **jpg**  | ✅  | ✅ | ✅   | ✅   |
+| **png**  | ✅  | ✅ | ✅   | ✅   |
+| **tif**  | ✅  | ✅ | ✅   | ✅   |
+| **bmp**  | ✅  | ✅ | ✅   | ✅   |
+| **gif**  | ✅  | ✅ | ✅   | ✅   |
+| **webp** | ✅  | ✅ | ✅   | ✅   |
+| **heic** | ✅  | ✅ | ✅   | ✅   |
 
 > *PDF input requires text-layer or OCR for scanned documents
 

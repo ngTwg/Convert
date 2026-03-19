@@ -17,8 +17,12 @@ def _has_latex() -> bool:
 class PandocConverter(BaseConverter):
     """Text/ebook conversion using Pandoc.
 
-    Input formats:  md, rst, txt, html, docx, odt, rtf, epub
-    Output formats: md, txt, html, docx, odt, rtf, epub
+    Input formats:  md, rst, txt, html, docx, odt, rtf, epub, latex, org,
+                    asciidoc, mediawiki, textile, opml, fb2, ipynb, json,
+                    man, t2t, twiki, tikiwiki, jira, csv
+    Output formats: md, txt, html, docx, odt, rtf, epub, latex, org,
+                    asciidoc, mediawiki, textile, opml, fb2, ipynb, json,
+                    man, pptx, revealjs, dzslides, slideous, slidy, s5
     + pdf  (only when xelatex/pdflatex is installed)
 
     NOTE: For DOCX→PDF without LaTeX, LibreOffice is preferred.
@@ -27,9 +31,34 @@ class PandocConverter(BaseConverter):
     name = "pandoc"
     priority = 4   # lower = preferred; LibreOffice=6 so Pandoc is tried first for text formats
 
-    _input_formats = {"md", "rst", "txt", "html", "docx", "odt", "rtf", "epub"}
+    _input_formats = {
+        # Text formats
+        "md", "rst", "txt", "html",
+        # Document formats
+        "docx", "odt", "rtf", "epub",
+        # Markup formats
+        "latex", "tex", "org", "asciidoc", "adoc",
+        "mediawiki", "textile", "opml", "fb2",
+        # Data/Code formats
+        "ipynb", "json",
+        # Other wiki/markup formats
+        "man", "t2t", "twiki", "tikiwiki", "jira", "csv",
+    }
     # pdf excluded by default; added dynamically only when LaTeX is present
-    _output_formats_base = {"md", "txt", "html", "docx", "odt", "rtf", "epub"}
+    _output_formats_base = {
+        # Text formats
+        "md", "txt", "html",
+        # Document formats
+        "docx", "odt", "rtf", "epub",
+        # Markup formats
+        "latex", "org", "asciidoc", "mediawiki", "textile", "opml", "fb2",
+        # Data/Code formats
+        "ipynb", "json",
+        # Presentation formats
+        "pptx", "revealjs", "dzslides", "slideous", "slidy", "s5",
+        # Other
+        "man",
+    }
 
     def __init__(self) -> None:
         self._pandoc = locate_executable(
@@ -86,8 +115,25 @@ class PandocConverter(BaseConverter):
             "-t", self._pandoc_format(target_format, is_input=False),
             "-o", str(destination),
             "--resource-path", str(source.parent),
-            "--standalone",
         ]
+
+        # Only use standalone for formats that need a complete document
+        standalone_formats = {"html", "epub", "pdf", "latex", "docx", "odt", "rtf", "pptx"}
+        if target_format in standalone_formats:
+            command.append("--standalone")
+
+        # Fix for abnormal bold text: use proper markdown extensions
+        if source_format in {"md", "txt", "markdown"}:
+            # Disable extensions that might cause unexpected bold
+            command[command.index("-f") + 1] = "markdown-smart-auto_identifiers"
+
+        # DOCX-specific: wrap text properly
+        if target_format == "docx":
+            command.extend(["--wrap", "auto"])
+
+        # HTML-specific: use clean output
+        if target_format == "html":
+            command.extend(["--wrap", "none"])
 
         if target_format == "pdf":
             # Pick available PDF engine
@@ -112,5 +158,7 @@ class PandocConverter(BaseConverter):
             return "markdown" if is_input else "plain"
         mapping = {
             "md": "markdown",
+            "tex": "latex",
+            "adoc": "asciidoc",
         }
         return mapping.get(fmt, fmt)

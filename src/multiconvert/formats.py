@@ -3,12 +3,14 @@ from __future__ import annotations
 from pathlib import Path
 
 EXT_TO_FORMAT: dict[str, str] = {
+    # Text formats
     ".md": "md",
     ".markdown": "md",
     ".txt": "txt",
     ".html": "html",
     ".htm": "html",
     ".rst": "rst",
+    # Document formats
     ".docx": "docx",
     ".doc": "doc",
     ".odt": "odt",
@@ -18,6 +20,33 @@ EXT_TO_FORMAT: dict[str, str] = {
     ".pptx": "pptx",
     ".xlsx": "xlsx",
     ".csv": "csv",
+    # LaTeX
+    ".tex": "latex",
+    ".latex": "latex",
+    # Org-mode
+    ".org": "org",
+    # AsciiDoc
+    ".adoc": "asciidoc",
+    ".asciidoc": "asciidoc",
+    # Wiki formats
+    ".mediawiki": "mediawiki",
+    ".wiki": "mediawiki",
+    ".textile": "textile",
+    # OPML (outlines)
+    ".opml": "opml",
+    # FictionBook
+    ".fb2": "fb2",
+    # Jupyter Notebook
+    ".ipynb": "ipynb",
+    # JSON
+    ".json": "json",
+    # Man pages
+    ".man": "man",
+    # txt2tags
+    ".t2t": "t2t",
+    # Jira/Confluence
+    ".jira": "jira",
+    # Image formats
     ".jpg": "jpg",
     ".jpeg": "jpg",
     ".png": "png",
@@ -26,6 +55,10 @@ EXT_TO_FORMAT: dict[str, str] = {
     ".bmp": "bmp",
     ".gif": "gif",
     ".webp": "webp",
+    ".ico": "ico",
+    ".svg": "svg",
+    ".heic": "heic",
+    ".heif": "heic",
 }
 
 FORMAT_ALIASES: dict[str, str] = {
@@ -33,9 +66,13 @@ FORMAT_ALIASES: dict[str, str] = {
     "htm": "html",
     "jpeg": "jpg",
     "tiff": "tif",
+    "tex": "latex",
+    "adoc": "asciidoc",
+    "wiki": "mediawiki",
+    "heif": "heic",
 }
 
-TEXT_EDITABLE_FORMATS: set[str] = {"md", "txt", "html", "rst"}
+TEXT_EDITABLE_FORMATS: set[str] = {"md", "txt", "html", "rst", "latex", "org", "asciidoc", "textile", "json"}
 
 DEFAULT_INTERMEDIATES: tuple[str, ...] = ("html", "odt", "docx", "md", "txt")
 

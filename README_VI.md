@@ -1,7 +1,7 @@
 # MultiConvert 🔄 🇻🇳
 
 > **Công cụ chuyển đổi & chỉnh sửa file đa định dạng cao cấp dành cho Windows**
-> Chuyển đổi qua lại giữa 19 định dạng đầu vào và 9 định dạng đầu ra với chất lượng cao • Trình chỉnh sửa ngay trong App • Xử lý hàng loạt (Batch)
+> Chuyển đổi qua lại giữa 35+ định dạng đầu vào và 25+ định dạng đầu ra với chất lượng cao • Trình chỉnh sửa ngay trong App • Xử lý hàng loạt (Batch)
 
 [Read in English](README.md)
 
@@ -20,8 +20,15 @@
 ## ✨ Tính Năng Nổi Bật
 
 ### 🔄 Chuyển Đổi Đa Định Dạng
-- **Đầu vào (19)**: MD, RST, TXT, HTML, DOCX, DOC, ODT, RTF, EPUB, PDF, PPTX, XLSX, CSV, JPG, PNG, TIF, BMP, GIF, WEBP
-- **Đầu ra (9)**: MD, TXT, HTML, DOCX, ODT, RTF, EPUB, PDF, CSV
+- **Đầu vào (35+)**:
+  - **Tài liệu**: MD, RST, TXT, HTML, DOCX, DOC, ODT, RTF, EPUB, PDF, PPTX, XLSX, CSV
+  - **Markup/Wiki**: LaTeX/TEX, Org, AsciiDoc, MediaWiki, Textile, OPML, FB2, Jira
+  - **Code/Dữ liệu**: JSON, Jupyter (IPYNB), Man pages, T2T, TWiki, TikiWiki
+  - **Hình ảnh (OCR)**: JPG, PNG, TIF, BMP, GIF, WEBP, ICO, HEIC
+- **Đầu ra (25+)**:
+  - **Tài liệu**: MD, TXT, HTML, DOCX, ODT, RTF, EPUB, PDF, CSV
+  - **Markup**: LaTeX, Org, AsciiDoc, MediaWiki, Textile, OPML, FB2, JSON
+  - **Trình chiếu**: PPTX, Reveal.js, DZSlides, Slideous, Slidy, S5
 - **Chuyển đổi bắc cầu tự động**: Nếu không có đường chuyển đổi trực tiếp (VD: `md→pdf`), app sẽ tự động mượn định dạng trung gian (`md→html→pdf`).
 
 ### ✏️ Trình Chỉnh Sửa Trực Tiếp (WYSIWYG)

@@ -7,6 +7,7 @@ from multiconvert.models import ConversionRequest
 
 
 class ConvertWorker(QObject):
+    """Worker for single file conversion."""
     finished = Signal(object)
     failed = Signal(str)
     log = Signal(str)
@@ -22,17 +23,23 @@ class ConvertWorker(QObject):
         try:
             result = self._manager.convert(self._request, logger=self.log.emit)
             self.finished.emit(result)
-        except Exception as exc:  # noqa: BLE001 - show all in UI log
+        except Exception as exc:
             self.failed.emit(str(exc))
         finally:
             self.done.emit()
 
 
 class BatchConvertWorker(QObject):
+    """Worker for batch file conversion with per-file progress."""
     batch_finished = Signal(int, int, list)  # success_count, total_count, failed_files
     log = Signal(str)
     done = Signal()
     progress = Signal(int, int)  # current, total
+
+    # Per-file signals
+    file_progress = Signal(str, int)  # file_path, progress (0-100)
+    file_complete = Signal(str, str)  # source_path, output_path
+    file_error = Signal(str, str)     # file_path, error_message
 
     def __init__(self, manager: ConverterManager, requests: list[ConversionRequest]) -> None:
         super().__init__()
@@ -46,16 +53,27 @@ class BatchConvertWorker(QObject):
         failed_list = []
 
         for i, request in enumerate(self._requests, 1):
-            self.log.emit(f"\n[{i}/{total}] {request.source.name}")
+            source_path = str(request.source)
+
+            # Emit start progress
+            self.file_progress.emit(source_path, 0)
+
             try:
+                # Simulate progress stages
+                self.file_progress.emit(source_path, 10)
+
                 result = self._manager.convert(request, logger=self.log.emit)
-                self.log.emit(f"   ✅ → {result.destination.name}")
+
+                self.file_progress.emit(source_path, 100)
+                self.file_complete.emit(source_path, str(result.destination))
                 success += 1
+
             except Exception as exc:
-                self.log.emit(f"   ⚠️ Lỗi: {exc}")
+                error_msg = str(exc)
+                self.file_error.emit(source_path, error_msg)
                 failed_list.append(request.source.name)
+
             self.progress.emit(i, total)
 
         self.batch_finished.emit(success, total, failed_list)
         self.done.emit()
-

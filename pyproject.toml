@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiconvert"
-version = "0.1.0"
-description = "Desktop multi-format converter with editing workflow"
+version = "0.2.0"
+description = "Desktop multi-format converter with editing workflow - 35+ input formats, 25+ output formats"
 requires-python = ">=3.11"
 dependencies = [
   "pypandoc>=1.13",

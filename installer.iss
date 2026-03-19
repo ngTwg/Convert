@@ -4,11 +4,12 @@
 
 #define MyAppName "MultiConvert"
 #ifndef MyAppVersion
-  #define MyAppVersion "0.1.0"
+  #define MyAppVersion "0.2.0"
 #endif
 #define MyAppPublisher "Lê Ngọc Tường - Đại học Khoa học Tự nhiên (HCMUS)"
 #define MyAppURL "https://github.com/ngTwg/Convert"
 #define MyAppExeName "MultiConvert.exe"
+#define MyAppDescription "Premium multi-format file converter - 35+ input formats, 25+ output formats"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -16,11 +17,12 @@
 AppId={{A7B8C9D0-E1F2-3456-7890-ABCDEF123456}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
+AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
-AppCopyright={#MyAppPublisher}
+AppCopyright=Copyright (C) 2024-2026 {#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
-AppSupportURL={#MyAppURL}
-AppUpdatesURL={#MyAppURL}
+AppSupportURL={#MyAppURL}/issues
+AppUpdatesURL={#MyAppURL}/releases
 DefaultDirName={localappdata}\Programs\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
@@ -33,6 +35,10 @@ WizardStyle=modern
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
+UninstallDisplayIcon={app}\{#MyAppExeName}
+UninstallDisplayName={#MyAppName}
+VersionInfoVersion={#MyAppVersion}
+VersionInfoDescription={#MyAppDescription}
 
 #ifexist "tools\logo.ico"
 SetupIconFile=tools\logo.ico
@@ -46,8 +52,9 @@ Name: "vietnamese"; MessagesFile: "compiler:Languages\Vietnamese.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-Name: "download_lo"; Description: "Tải và Cài đặt thêm LibreOffice (Cần thiết để chuyển Office sang PDF)"; GroupDescription: "Công cụ bổ sung (Khuyên dùng nếu chưa có):"; Flags: unchecked
-Name: "download_ocr"; Description: "Tải và Cài đặt thêm Tesseract OCR (Cần thiết để quét chữ từ ảnh/PDF scan)"; GroupDescription: "Công cụ bổ sung (Khuyên dùng nếu chưa có):"; Flags: unchecked
+Name: "quicklaunchicon"; Description: "Create a &Quick Launch icon"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "download_lo"; Description: "Download and Install LibreOffice (Required for Office→PDF conversion)"; GroupDescription: "Optional Tools (Recommended if not installed):"; Flags: unchecked
+Name: "download_ocr"; Description: "Download and Install Tesseract OCR (Required for OCR from images/scanned PDFs)"; GroupDescription: "Optional Tools (Recommended if not installed):"; Flags: unchecked
 
 [Files]
 ; Main application files
@@ -55,41 +62,49 @@ Source: "dist\{#MyAppName}\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignorevers
 Source: "dist\{#MyAppName}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Comment: "{#MyAppDescription}"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; Comment: "{#MyAppDescription}"
+
+[Registry]
+; Register application path
+Root: HKCU; Subkey: "Software\{#MyAppName}"; ValueType: string; ValueName: "InstallPath"; ValueData: "{app}"; Flags: uninsdeletekey
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 ; Install downloaded tools silently if downloaded
-Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\LibreOffice.msi"" /qn"; Tasks: download_lo; StatusMsg: "Đang cài đặt LibreOffice (Vui lòng chờ, quá trình này mất khoảng 3-5 phút)..."
-Filename: "{tmp}\Tesseract.exe"; Parameters: "/S"; Tasks: download_ocr; StatusMsg: "Đang cài đặt Tesseract OCR..."
+Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\LibreOffice.msi"" /qn"; Tasks: download_lo; StatusMsg: "Installing LibreOffice (Please wait, this may take 3-5 minutes)..."
+Filename: "{tmp}\Tesseract.exe"; Parameters: "/S"; Tasks: download_ocr; StatusMsg: "Installing Tesseract OCR..."
 
 [Code]
 var
   DownloadPage: TDownloadWizardPage;
+  NeedsDownload: Boolean;
 
 function CheckLibreOffice(): Boolean;
 var
-  Path1, Path2: String;
+  Path1, Path2, Path3: String;
 begin
   Path1 := ExpandConstant('{commonpf}\LibreOffice\program\soffice.exe');
   Path2 := ExpandConstant('{commonpf32}\LibreOffice\program\soffice.exe');
-  Result := FileExists(Path1) or FileExists(Path2);
+  Path3 := ExpandConstant('{localappdata}\Programs\LibreOffice\program\soffice.exe');
+  Result := FileExists(Path1) or FileExists(Path2) or FileExists(Path3);
 end;
 
 function CheckTesseract(): Boolean;
 var
-  Path1, Path2: String;
+  Path1, Path2, Path3: String;
 begin
   Path1 := ExpandConstant('{commonpf}\Tesseract-OCR\tesseract.exe');
   Path2 := ExpandConstant('{commonpf32}\Tesseract-OCR\tesseract.exe');
-  Result := FileExists(Path1) or FileExists(Path2);
+  Path3 := ExpandConstant('{localappdata}\Programs\Tesseract-OCR\tesseract.exe');
+  Result := FileExists(Path1) or FileExists(Path2) or FileExists(Path3);
 end;
 
 procedure InitializeWizard;
 begin
   DownloadPage := CreateDownloadPage(SetupMessage(msgWizardPreparing), SetupMessage(msgPreparingDesc), nil);
+  NeedsDownload := False;
 end;
 
 procedure CurPageChanged(CurPageID: Integer);
@@ -98,22 +113,32 @@ begin
   begin
     // Disable tasks if already installed
     if CheckLibreOffice() then
-      WizardForm.TasksList.ItemEnabled[1] := False; // 'download_lo' is 2nd item (index 1) usually if desktopicon is 0
+      WizardForm.TasksList.ItemEnabled[2] := False; // 'download_lo' index adjusted
     if CheckTesseract() then
-      WizardForm.TasksList.ItemEnabled[2] := False; // 'download_ocr' is 3rd item
+      WizardForm.TasksList.ItemEnabled[3] := False; // 'download_ocr' index adjusted
   end;
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
 begin
+  Result := True;
   if CurPageID = wpReady then begin
     DownloadPage.Clear;
-    if IsTaskSelected('download_lo') and not CheckLibreOffice() then
-      DownloadPage.Add('https://download.documentfoundation.org/libreoffice/stable/7.6.6/win/x86_64/LibreOffice_7.6.6_Win_x86-64.msi', ExpandConstant('{tmp}\LibreOffice.msi'), '');
-    if IsTaskSelected('download_ocr') and not CheckTesseract() then
+    NeedsDownload := False;
+
+    // LibreOffice 24.2.x (latest stable as of 2024)
+    if IsTaskSelected('download_lo') and not CheckLibreOffice() then begin
+      DownloadPage.Add('https://download.documentfoundation.org/libreoffice/stable/24.2.5/win/x86_64/LibreOffice_24.2.5_Win_x86-64.msi', ExpandConstant('{tmp}\LibreOffice.msi'), '');
+      NeedsDownload := True;
+    end;
+
+    // Tesseract 5.3.3 (latest stable)
+    if IsTaskSelected('download_ocr') and not CheckTesseract() then begin
       DownloadPage.Add('https://digi.bib.uni-mannheim.de/tesseract/tesseract-ocr-w64-setup-5.3.3.20231005.exe', ExpandConstant('{tmp}\Tesseract.exe'), '');
-    
-    if DownloadPage.Msg1Label.Caption <> '' then // Meaning files were added
+      NeedsDownload := True;
+    end;
+
+    if NeedsDownload then
     begin
       DownloadPage.Show;
       try
@@ -122,16 +147,14 @@ begin
           Result := True;
         except
           if DownloadPage.AbortedByUser then
-            Log('Aborted by user.')
+            Log('Download aborted by user.')
           else
-            MsgBox('Lỗi khi tải xuống các gói bổ sung. Vui lòng kiểm tra lại mạng.', mbError, MB_OK);
-          Result := False; // Stop installation if download fails
+            MsgBox('Error downloading optional components. Please check your internet connection and try again.', mbError, MB_OK);
+          Result := False;
         end;
       finally
         DownloadPage.Hide;
       end;
-    end else
-      Result := True;
-  end else
-    Result := True;
+    end;
+  end;
 end;
