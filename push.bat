@@ -19,7 +19,7 @@ if not exist ".git\" (
     echo [INFO] Khoi tao Git repository...
     git init
     git branch -M main
-    git remote add origin git@acc:ngTwg/Convert.git
+    git remote add origin https://github.com/ngTwg/Convert.git
     echo [INFO] Da khoi tao va ket noi voi GitHub.
     echo.
 )
