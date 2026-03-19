@@ -109,9 +109,9 @@ begin
   if CurPageID = wpReady then begin
     DownloadPage.Clear;
     if IsTaskSelected('download_lo') and not CheckLibreOffice() then
-      DownloadPage.Add('https://download.documentfoundation.org/libreoffice/stable/7.6.6/win/x86_64/LibreOffice_7.6.6_Win_x86-64.msi', 'LibreOffice.msi', '');
+      DownloadPage.Add('https://download.documentfoundation.org/libreoffice/stable/7.6.6/win/x86_64/LibreOffice_7.6.6_Win_x86-64.msi', ExpandConstant('{tmp}\LibreOffice.msi'), '');
     if IsTaskSelected('download_ocr') and not CheckTesseract() then
-      DownloadPage.Add('https://digi.bib.uni-mannheim.de/tesseract/tesseract-ocr-w64-setup-5.3.3.20231005.exe', 'Tesseract.exe', '');
+      DownloadPage.Add('https://digi.bib.uni-mannheim.de/tesseract/tesseract-ocr-w64-setup-5.3.3.20231005.exe', ExpandConstant('{tmp}\Tesseract.exe'), '');
     
     if DownloadPage.Msg1Label.Caption <> '' then // Meaning files were added
     begin
