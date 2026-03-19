@@ -1,3 +1,9 @@
-from .tools import locate_executable, run_command
+from .tools import locate_executable, locate_soffice, locate_tesseract, locate_poppler_bindir, run_command
 
-__all__ = ["locate_executable", "run_command"]
+__all__ = [
+    "locate_executable",
+    "locate_soffice",
+    "locate_tesseract",
+    "locate_poppler_bindir",
+    "run_command",
+]

@@ -96,6 +96,41 @@ python main.py --list-formats
 
 ---
 
+## Hướng dẫn Đóng gói và Phát hành (Release Guide)
+
+Để đóng gói ứng dụng thành file `.exe` sử dụng ngay (không cần cài đặt Python), bạn hãy chạy đoạn mã lệnh PowerShell sau:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File build_exe.ps1 -UseVenv
+```
+
+**Quá trình này sẽ thực hiện:**
+1. Tạo một môi trường ảo (`build_venv`) sạch sẽ, giúp giảm dung lượng của file exe (từ 1.3GB xuống còn khoảng >900MB).
+2. Tự động gom các thư viện cần thiết như Pandoc, bộ giao diện PySide6 WebEngine.
+3. Tạo file `MultiConvert.exe` (đã giấu bảng cmd bằng `--windowed`) có kèm icon logo.
+4. Xuất file hướng dẫn `README.txt` để hỗ trợ người dùng cuối.
+
+**Output (Kết quả xuất ra):**
+Toàn bộ phần mềm sẽ được đặt trong thư mục `dist\MultiConvert\`.
+Bạn có thể nén toàn bộ thư mục `MultiConvert` này lại bằng WinRAR / ZIP và gửi cho người dùng. Người dùng chỉ việc giải nén và nhấp đúp vào `MultiConvert.exe` để chạy.
+
+>Lưu ý: Thư mục `_internal/` chứa các thư viện và code bắt buộc và phải nằm cùng thư mục gốc với file `.exe`. Mọi tệp trong đây không được xoá. 
+
+---
+
+## 🛠️ Trình quản lý chuyển đổi mở rộng (Dành cho người phân phối)
+
+Tool tự động kèm theo Pandoc. Tuy nhiên, một số định dạng sau cần cài thêm Engine:
+
+1. **PDF dạng Scan / Hình ảnh (JPG, PNG) ra Chữ:**
+   - Yêu cầu người dùng (hoặc bạn có thể đính kèm bộ cài) **Tesseract OCR**. Cài đặt ở thư mục mặc định `C:\Program Files\Tesseract-OCR`. 
+   - MultiConvert sẽ tự động nhận diện và ghép Engine.
+   
+2. **Word (DOC, DOCX), Excel (XLSX, CSV) ra PDF:**
+   - MultiConvert dùng **LibreOffice** để xử lý không lỗi font. Người dùng cần cài sẵn phần mềm LibreOffice trong máy (máy tính phổ thông nào cũng nên cài).
+
+---
+
 ## 📦 Build .exe
 
 ```powershell

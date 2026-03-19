@@ -73,12 +73,12 @@ class DropZone(QFrame):
         icon.setStyleSheet("font-size: 36px; background: transparent; border: none; color: rgba(232,168,56,0.45);")
         layout.addWidget(icon)
 
-        hint = QLabel("Drop files here  ·  or click Browse")
+        hint = QLabel("Kéo thả file vào đây  ·  hoặc nhấn Chọn File")
         hint.setObjectName("dropHint")
         hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(hint)
 
-        sub = QLabel("Supports: DOCX  PDF  MD  HTML  EPUB  ODT  RTF  TXT  images …")
+        sub = QLabel("Hỗ trợ: DOCX  PDF  MD  HTML  EPUB  ODT  RTF  TXT  Hình ảnh …")
         sub.setObjectName("subtitleLabel")
         sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(sub)
@@ -155,39 +155,39 @@ class MainWindow(QMainWindow):
         root.addWidget(self.drop_zone)
 
         # ── Input / Output Section ──
-        io_group = QGroupBox(f"  {ICON_FILE}  Input / Output")
+        io_group = QGroupBox(f"  {ICON_FILE}  Đầu vào / Đầu ra")
         io_layout = QVBoxLayout()
         io_layout.setSpacing(10)
 
         # Input row
         in_row = QHBoxLayout()
-        lbl_in = QLabel("Source file")
+        lbl_in = QLabel("File gốc")
         lbl_in.setMinimumWidth(80)
         in_row.addWidget(lbl_in)
         self.input_path = QLineEdit()
-        self.input_path.setPlaceholderText("Select a file or drag-and-drop above…")
+        self.input_path.setPlaceholderText("Chọn file hoặc kéo thả vào ô phía trên…")
         in_row.addWidget(self.input_path)
-        self.btn_input = QPushButton(f"{ICON_FOLDER}  Browse")
+        self.btn_input = QPushButton(f"{ICON_FOLDER}  Chọn File")
         self.btn_input.setMinimumWidth(100)
         in_row.addWidget(self.btn_input)
         io_layout.addLayout(in_row)
 
         # Format + Output row
         out_row = QHBoxLayout()
-        lbl_fmt = QLabel("Convert to")
+        lbl_fmt = QLabel("Chuyển sang")
         lbl_fmt.setMinimumWidth(80)
         out_row.addWidget(lbl_fmt)
         self.target_combo = QComboBox()
         self.target_combo.addItems(sorted(self._manager.all_formats()))
         self.target_combo.setMinimumWidth(90)
         out_row.addWidget(self.target_combo)
-        lbl_out = QLabel("Output")
+        lbl_out = QLabel("Lưu tại")
         lbl_out.setMinimumWidth(50)
         out_row.addWidget(lbl_out)
         self.output_path = QLineEdit()
-        self.output_path.setPlaceholderText("Auto-generated from input file name")
+        self.output_path.setPlaceholderText("Tự động tạo tên dựa theo file gốc")
         out_row.addWidget(self.output_path)
-        self.btn_output = QPushButton(f"{ICON_FOLDER}  Browse")
+        self.btn_output = QPushButton(f"{ICON_FOLDER}  Chọn Thư Mục")
         self.btn_output.setMinimumWidth(100)
         out_row.addWidget(self.btn_output)
         io_layout.addLayout(out_row)
@@ -196,18 +196,18 @@ class MainWindow(QMainWindow):
         root.addWidget(io_group)
 
         # ── Options Section ──
-        opt_group = QGroupBox(f"  {ICON_ENGINE}  Options")
+        opt_group = QGroupBox(f"  {ICON_ENGINE}  Tùy chọn")
         opt_layout = QHBoxLayout()
         opt_layout.setSpacing(20)
 
-        self.chk_open_after = QCheckBox("Open output after conversion")
+        self.chk_open_after = QCheckBox("Tự động mở file sau khi hoàn tất")
         self.chk_open_after.setChecked(True)
         opt_layout.addWidget(self.chk_open_after)
 
-        self.chk_ocr = QCheckBox("Force OCR (scanned PDF / images)")
+        self.chk_ocr = QCheckBox("Dùng OCR (với file ảnh / PDF scan)")
         opt_layout.addWidget(self.chk_ocr)
 
-        lbl_lang = QLabel("OCR lang")
+        lbl_lang = QLabel("Ngôn ngữ OCR")
         opt_layout.addWidget(lbl_lang)
         self.input_ocr_lang = QLineEdit("vie+eng")
         self.input_ocr_lang.setMaximumWidth(100)
@@ -218,14 +218,14 @@ class MainWindow(QMainWindow):
         root.addWidget(opt_group)
 
         # ── Batch list (hidden by default) ──
-        self.batch_group = QGroupBox(f"  {ICON_BATCH}  Batch Queue")
+        self.batch_group = QGroupBox(f"  {ICON_BATCH}  Hàng đợi nhiều file")
         batch_layout = QVBoxLayout()
         self.batch_list = QListWidget()
         self.batch_list.setMaximumHeight(120)
         batch_layout.addWidget(self.batch_list)
 
         batch_btn_row = QHBoxLayout()
-        self.btn_clear_batch = QPushButton(f"{ICON_REMOVE}  Clear list")
+        self.btn_clear_batch = QPushButton(f"{ICON_REMOVE}  Xóa danh sách")
         self.btn_clear_batch.setObjectName("dangerBtn")
         batch_btn_row.addWidget(self.btn_clear_batch)
         batch_btn_row.addStretch()
@@ -239,17 +239,17 @@ class MainWindow(QMainWindow):
         action_row = QHBoxLayout()
         action_row.setSpacing(10)
 
-        self.btn_convert = QPushButton(f"{ICON_CONVERT}  Convert")
+        self.btn_convert = QPushButton(f"{ICON_CONVERT}  Bắt Đầu Chuyển")
         self.btn_convert.setObjectName("primaryBtn")
         self.btn_convert.setMinimumHeight(44)
         action_row.addWidget(self.btn_convert)
 
-        self.btn_open = QPushButton(f"{ICON_OPEN}  Open Output")
+        self.btn_open = QPushButton(f"{ICON_OPEN}  Mở File")
         self.btn_open.setObjectName("successBtn")
         self.btn_open.setEnabled(False)
         action_row.addWidget(self.btn_open)
 
-        self.btn_edit = QPushButton(f"{ICON_EDIT}  Edit in App")
+        self.btn_edit = QPushButton(f"{ICON_EDIT}  Sửa File")
         self.btn_edit.setEnabled(False)
         action_row.addWidget(self.btn_edit)
 
@@ -263,7 +263,7 @@ class MainWindow(QMainWindow):
         root.addWidget(self.progress)
 
         # ── Log ──
-        log_group = QGroupBox("  📋  Conversion Log")
+        log_group = QGroupBox("  📋  Nhật ký xử lý")
         log_layout = QVBoxLayout()
         self.log_box = QTextEdit()
         self.log_box.setObjectName("logBox")
@@ -308,12 +308,12 @@ class MainWindow(QMainWindow):
             parts.append(f"{ICON_CHECK} {c.name}")
         missing = {"pandoc", "libreoffice", "ocr"} - set(names)
         for m in sorted(missing):
-            parts.append(f"{ICON_WARN} {m} (not found)")
+            parts.append(f"{ICON_WARN} {m} (chưa cài)")
 
         self.engine_status.setText("  ·  ".join(parts))
         self.status_bar.showMessage(
-            f"Ready — {len(active)} engine(s) active, "
-            f"{len(self._manager.all_formats())} formats available"
+            f"Sẵn sàng — {len(active)} bộ máy xử lý, "
+            f"hỗ trợ {len(self._manager.all_formats())} định dạng file"
         )
 
     # ═══════════════════════════════════════════════════════
@@ -342,8 +342,8 @@ class MainWindow(QMainWindow):
                 item.setToolTip(p)
                 self.batch_list.addItem(item)
             self.batch_group.setVisible(True)
-            self.input_path.setText(f"{len(paths)} files selected (batch mode)")
-            self._append_log(f"Batch: {len(paths)} files queued")
+            self.input_path.setText(f"Đã chọn {len(paths)} file (Chế độ nhiều file)")
+            self._append_log(f"Đã nạp {len(paths)} file vào danh sách")
 
     def _clear_batch(self) -> None:
         self._batch_files.clear()
@@ -356,7 +356,7 @@ class MainWindow(QMainWindow):
     # ═══════════════════════════════════════════════════════
 
     def _pick_input(self) -> None:
-        selected, _ = QFileDialog.getOpenFileNames(self, "Choose source file(s)")
+        selected, _ = QFileDialog.getOpenFileNames(self, "Chọn một hoặc nhiều file gốc")
         if not selected:
             return
         if len(selected) == 1:
@@ -378,7 +378,7 @@ class MainWindow(QMainWindow):
 
     def _pick_output(self) -> None:
         current = self.output_path.text().strip() or self._default_output_path()
-        selected, _ = QFileDialog.getSaveFileName(self, "Output file", current)
+        selected, _ = QFileDialog.getSaveFileName(self, "Lưu file kết quả", current)
         if selected:
             self.output_path.setText(selected)
 
@@ -416,7 +416,7 @@ class MainWindow(QMainWindow):
         dst_text = self.output_path.text().strip()
         target_fmt = self.target_combo.currentText().strip()
         if not src_text or not target_fmt:
-            QMessageBox.warning(self, "Missing input", "Please select source and target format.")
+            QMessageBox.warning(self, "Chưa chọn đủ", "Vui lòng chọn file gốc và định dạng muốn chuyển!")
             return
 
         if not dst_text:
@@ -432,7 +432,7 @@ class MainWindow(QMainWindow):
 
         self._set_converting_state(True)
         self.log_box.clear()
-        self._append_log(f"{ICON_CONVERT} Starting conversion…")
+        self._append_log(f"{ICON_CONVERT} Đang xử lý…")
         self._append_log(f"   {Path(src_text).name}  →  .{target_fmt}")
 
         self._thread = QThread(self)
@@ -453,42 +453,55 @@ class MainWindow(QMainWindow):
     def _start_batch_convert(self) -> None:
         target_fmt = self.target_combo.currentText().strip()
         if not target_fmt:
-            QMessageBox.warning(self, "Missing format", "Select a target format.")
+            QMessageBox.warning(self, "Chưa chọn đủ", "Vui lòng chọn định dạng muốn chuyển!")
             return
 
         self._set_converting_state(True)
         self.log_box.clear()
-        self._append_log(f"{ICON_BATCH} Batch converting {len(self._batch_files)} files to .{target_fmt}")
+        self._append_log(f"{ICON_BATCH} Đang chuyển đổi hàng loạt {len(self._batch_files)} file sang .{target_fmt}")
 
-        total = len(self._batch_files)
-        success = 0
-        failed_list: list[str] = []
-
-        for i, src_text in enumerate(self._batch_files, 1):
+        requests = []
+        for src_text in self._batch_files:
             src = Path(src_text)
             dst = src.with_name(f"{src.stem}_converted.{target_fmt}")
-            self._append_log(f"\n[{i}/{total}] {src.name}")
-            try:
-                request = ConversionRequest(
-                    source=src,
-                    destination=dst,
-                    target_format=target_fmt,
-                    options=self._build_options(),
-                )
-                result = self._manager.convert(request, logger=self._append_log)
-                self._append_log(f"   {ICON_CHECK} → {result.destination.name}")
-                success += 1
-            except Exception as exc:
-                self._append_log(f"   {ICON_WARN} Failed: {exc}")
-                failed_list.append(src.name)
+            requests.append(ConversionRequest(
+                source=src,
+                destination=dst,
+                target_format=target_fmt,
+                options=self._build_options(),
+            ))
 
+        from multiconvert.ui.worker import BatchConvertWorker
+        self._thread = QThread(self)
+        self._batch_worker = BatchConvertWorker(self._manager, requests)
+        self._batch_worker.moveToThread(self._thread)
+
+        # Indeterminate or percentage progress based on current
+        self.progress.setRange(0, len(requests))
+        self.progress.setValue(0)
+
+        self._thread.started.connect(self._batch_worker.run)
+        self._batch_worker.log.connect(self._append_log)
+        self._batch_worker.progress.connect(self._update_progress)
+        self._batch_worker.batch_finished.connect(self._on_batch_finished)
+        
+        self._batch_worker.done.connect(self._thread.quit)
+        self._batch_worker.done.connect(self._batch_worker.deleteLater)
+        self._thread.finished.connect(self._thread.deleteLater)
+        self._thread.finished.connect(lambda: self._set_converting_state(False))
+
+        self._thread.start()
+
+    def _update_progress(self, current: int, total: int) -> None:
+        self.progress.setValue(current)
+        self.status_bar.showMessage(f"Đang xử lý {current} / {total}...")
+
+    def _on_batch_finished(self, success: int, total: int, failed_list: list) -> None:
         self._append_log(f"\n{'═'*50}")
-        self._append_log(f"Batch complete: {success}/{total} succeeded")
+        self._append_log(f"Hoàn thành: {success}/{total} file thành công")
         if failed_list:
-            self._append_log(f"Failed: {', '.join(failed_list)}")
-
-        self._set_converting_state(False)
-        self.status_bar.showMessage(f"Batch done — {success}/{total} converted")
+            self._append_log(f"Gặp lỗi ({len(failed_list)}): {', '.join(failed_list)}")
+        self.status_bar.showMessage(f"Đã xong — {success}/{total} file hoàn tất")
 
     def _build_options(self) -> dict:
         options: dict[str, object] = {}
@@ -503,26 +516,28 @@ class MainWindow(QMainWindow):
         self.btn_edit.setEnabled(False)
         self.progress.setVisible(converting)
         if converting:
-            self.status_bar.showMessage("Converting…")
+            if not self._batch_files:
+                self.progress.setRange(0, 0)
+            self.status_bar.showMessage("Đang xử lý…")
         else:
             self.progress.setVisible(False)
 
     def _on_finished(self, result: ConversionResult) -> None:
         self._last_result = result
         self.output_path.setText(str(result.destination))
-        self._append_log(f"\n{ICON_CHECK} Conversion completed!")
+        self._append_log(f"\n{ICON_CHECK} Chuyển đổi thành công!")
         if result.route:
             route_str = " → ".join(
                 f"{step.source_format}→{step.target_format}" for step in result.route
             )
-            self._append_log(f"   Route: {route_str}")
+            self._append_log(f"   Quy trình: {route_str}")
 
         self.btn_open.setEnabled(True)
         out_fmt = detect_format(result.destination)
         self.btn_edit.setEnabled(out_fmt in TEXT_EDITABLE_FORMATS)
 
         self.status_bar.showMessage(
-            f"Done — Output: {result.destination.name} "
+            f"Đã xong — Kết quả: {result.destination.name} "
             f"({result.destination.stat().st_size / 1024:.1f} KB)"
         )
 
@@ -530,10 +545,10 @@ class MainWindow(QMainWindow):
             self._open_path(result.destination)
 
     def _on_failed(self, message: str) -> None:
-        self._append_log(f"\n{ICON_WARN} Conversion failed!")
+        self._append_log(f"\n{ICON_WARN} Chuyển đổi thất bại!")
         self._append_log(f"   {message}")
-        self.status_bar.showMessage("Conversion failed")
-        QMessageBox.critical(self, "Conversion Failed", message)
+        self.status_bar.showMessage("Gặp lỗi!")
+        QMessageBox.critical(self, "Lỗi khi chuyển đổi", message)
 
     # ═══════════════════════════════════════════════════════
     #  POST-ACTIONS
@@ -552,8 +567,8 @@ class MainWindow(QMainWindow):
         if out_fmt not in TEXT_EDITABLE_FORMATS:
             QMessageBox.information(
                 self,
-                "Unsupported in-app edit",
-                "In-app editor currently supports: md, txt, html, rst.",
+                "Chưa được hỗ trợ",
+                f"Trình soạn thảo trực tiếp hiện chỉ hỗ trợ các định dạng dạng text như: md, txt, html, rst.",
             )
             return
 

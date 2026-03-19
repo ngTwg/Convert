@@ -7,10 +7,15 @@ from pathlib import Path
 from multiconvert.converters.base import BaseConverter
 from multiconvert.errors import ConversionError
 from multiconvert.formats import normalize_format
-from multiconvert.utils import locate_executable, run_command
+from multiconvert.utils import locate_soffice, run_command
 
 
 class LibreOfficeConverter(BaseConverter):
+    """Converts office documents using LibreOffice headless.
+
+    Supports: doc, docx, odt, rtf, pptx, xlsx, html, txt, csv → pdf/docx/odt/rtf/html/txt/csv/epub
+    """
+
     name = "libreoffice"
     priority = 6
 
@@ -29,14 +34,7 @@ class LibreOfficeConverter(BaseConverter):
     _output_formats = {"pdf", "docx", "odt", "rtf", "html", "txt", "csv", "epub"}
 
     def __init__(self) -> None:
-        self._soffice = (
-            locate_executable(
-                "soffice",
-                env_var="MULTICONVERT_SOFFICE",
-                portable_subpath="tools/libreoffice/program/soffice.exe",
-            )
-            or locate_executable("soffice.exe", env_var="MULTICONVERT_SOFFICE")
-        )
+        self._soffice = locate_soffice()
 
     def supported_pairs(self) -> set[tuple[str, str]]:
         pairs: set[tuple[str, str]] = set()

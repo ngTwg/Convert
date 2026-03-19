@@ -205,7 +205,7 @@ function fmt(cmd, val) {
 }
 
 function insertLink() {
-  var url = prompt('Enter URL:');
+  var url = prompt('Nhập link (URL):');
   if (url) {
     document.execCommand('createLink', false, url);
   }
@@ -228,7 +228,7 @@ class EditorDialog(QDialog):
 
     def __init__(self, manager: ConverterManager, file_path: Path, parent=None) -> None:
         super().__init__(parent)
-        self.setWindowTitle(f"✏️  Edit: {file_path.name}")
+        self.setWindowTitle(f"✏️  Sửa file: {file_path.name}")
         self.resize(1060, 780)
         self._manager = manager
         self._file_path = file_path
@@ -257,7 +257,7 @@ class EditorDialog(QDialog):
 
         # ── Export controls ──
         export_row = QHBoxLayout()
-        export_row.addWidget(QLabel("Export to"))
+        export_row.addWidget(QLabel("Xuất file sang dạng"))
         self.target_combo = QComboBox()
         self.target_combo.addItems(
             sorted(["md", "txt", "html", "docx", "odt", "rtf", "pdf", "epub"])
@@ -270,20 +270,20 @@ class EditorDialog(QDialog):
         )
         export_row.addWidget(self.export_path)
 
-        self.btn_pick_export = QPushButton("📁 Browse")
+        self.btn_pick_export = QPushButton("📁 Chọn Thư Mục")
         export_row.addWidget(self.btn_pick_export)
         layout.addLayout(export_row)
 
         # ── Action buttons ──
         action_row = QHBoxLayout()
-        self.btn_save = QPushButton("💾  Save")
+        self.btn_save = QPushButton("💾  Lưu")
         action_row.addWidget(self.btn_save)
 
-        self.btn_export = QPushButton("⚡  Save + Export")
+        self.btn_export = QPushButton("⚡  Lưu và Xuất file")
         self.btn_export.setObjectName("primaryBtn")
         action_row.addWidget(self.btn_export)
 
-        self.btn_close = QPushButton("Close")
+        self.btn_close = QPushButton("Đóng")
         action_row.addWidget(self.btn_close)
         layout.addLayout(action_row)
 
@@ -336,7 +336,7 @@ class EditorDialog(QDialog):
         target = self.target_combo.currentText()
         selected, _ = QFileDialog.getSaveFileName(
             self,
-            "Export destination",
+            "Lưu file xuất ra tại",
             self.export_path.text(),
             f"*.{target}",
         )
@@ -347,15 +347,15 @@ class EditorDialog(QDialog):
         try:
             self._do_save()
         except Exception as exc:
-            QMessageBox.critical(self, "Save failed", str(exc))
+            QMessageBox.critical(self, "Lỗi khi lưu file", str(exc))
             return
-        QMessageBox.information(self, "Saved", "Edited content has been saved.")
+        QMessageBox.information(self, "Đã lưu", "Đã lưu nội dung chỉnh sửa thành công.")
 
     def _save_and_export(self) -> None:
         try:
             self._do_save()
         except Exception as exc:
-            QMessageBox.critical(self, "Save failed", str(exc))
+            QMessageBox.critical(self, "Lỗi khi lưu file", str(exc))
             return
 
         target_path = Path(self.export_path.text())
@@ -371,11 +371,11 @@ class EditorDialog(QDialog):
             )
             result = self._manager.convert(request)
         except Exception as exc:
-            QMessageBox.critical(self, "Export failed", str(exc))
+            QMessageBox.critical(self, "Lỗi khi xuất file", str(exc))
             return
 
         QMessageBox.information(
-            self, "Done", f"Exported to:\n{result.destination}"
+            self, "Hoàn tất", f"Đã xuất file ra:\n{result.destination}"
         )
 
     def _do_save(self) -> None:

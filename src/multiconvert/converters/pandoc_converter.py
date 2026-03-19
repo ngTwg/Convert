@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import importlib.util
+import shutil
 from pathlib import Path
 
 from multiconvert.converters.base import BaseConverter
@@ -7,12 +9,27 @@ from multiconvert.formats import normalize_format
 from multiconvert.utils import locate_executable, run_command
 
 
+def _has_latex() -> bool:
+    """Check if xelatex/pdflatex is available for Pandoc PDF output."""
+    return bool(shutil.which("xelatex") or shutil.which("pdflatex") or shutil.which("lualatex"))
+
+
 class PandocConverter(BaseConverter):
+    """Text/ebook conversion using Pandoc.
+
+    Input formats:  md, rst, txt, html, docx, odt, rtf, epub
+    Output formats: md, txt, html, docx, odt, rtf, epub
+    + pdf  (only when xelatex/pdflatex is installed)
+
+    NOTE: For DOCX→PDF without LaTeX, LibreOffice is preferred.
+    """
+
     name = "pandoc"
-    priority = 4
+    priority = 4   # lower = preferred; LibreOffice=6 so Pandoc is tried first for text formats
 
     _input_formats = {"md", "rst", "txt", "html", "docx", "odt", "rtf", "epub"}
-    _output_formats = {"md", "txt", "html", "docx", "odt", "rtf", "epub", "pdf"}
+    # pdf excluded by default; added dynamically only when LaTeX is present
+    _output_formats_base = {"md", "txt", "html", "docx", "odt", "rtf", "epub"}
 
     def __init__(self) -> None:
         self._pandoc = locate_executable(
@@ -30,10 +47,18 @@ class PandocConverter(BaseConverter):
             except Exception:
                 pass
 
+        self._has_latex = _has_latex()
+
+    def _output_formats(self) -> set[str]:
+        fmts = set(self._output_formats_base)
+        if self._has_latex:
+            fmts.add("pdf")
+        return fmts
+
     def supported_pairs(self) -> set[tuple[str, str]]:
         pairs: set[tuple[str, str]] = set()
         for src in self._input_formats:
-            for dst in self._output_formats:
+            for dst in self._output_formats():
                 if src != dst:
                     pairs.add((src, dst))
         return pairs
@@ -57,19 +82,24 @@ class PandocConverter(BaseConverter):
         command = [
             self._pandoc or "pandoc",
             str(source),
-            "-f",
-            self._pandoc_format(source_format),
-            "-t",
-            self._pandoc_format(target_format),
-            "-o",
-            str(destination),
-            "--resource-path",
-            str(source.parent),
+            "-f", self._pandoc_format(source_format),
+            "-t", self._pandoc_format(target_format),
+            "-o", str(destination),
+            "--resource-path", str(source.parent),
+            "--standalone",
         ]
 
         if target_format == "pdf":
-            pdf_engine = options.get("pdf_engine", "xelatex")
-            command.append(f"--pdf-engine={pdf_engine}")
+            # Pick available PDF engine
+            for engine in ("xelatex", "pdflatex", "lualatex", "wkhtmltopdf"):
+                if shutil.which(engine):
+                    command.append(f"--pdf-engine={engine}")
+                    break
+            else:
+                # Fallback to user-specified
+                pdf_engine = options.get("pdf_engine", "xelatex")
+                command.append(f"--pdf-engine={pdf_engine}")
+
             template = options.get("pdf_template")
             if template:
                 command.extend(["--template", str(template)])
@@ -78,6 +108,8 @@ class PandocConverter(BaseConverter):
 
     @staticmethod
     def _pandoc_format(fmt: str) -> str:
-        if fmt == "md":
-            return "markdown"
-        return fmt
+        mapping = {
+            "md": "markdown",
+            "txt": "plain",
+        }
+        return mapping.get(fmt, fmt)
