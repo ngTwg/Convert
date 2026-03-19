@@ -72,9 +72,9 @@ Root: HKCU; Subkey: "Software\{#MyAppName}"; ValueType: string; ValueName: "Inst
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
-; Install downloaded tools silently if downloaded
-Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\LibreOffice.msi"" /qn"; Tasks: download_lo; StatusMsg: "Installing LibreOffice (Please wait, this may take 3-5 minutes)..."
-Filename: "{tmp}\Tesseract.exe"; Parameters: "/S"; Tasks: download_ocr; StatusMsg: "Installing Tesseract OCR..."
+; Install downloaded tools silently if downloaded - Check file exists first
+Filename: "msiexec.exe"; Parameters: "/i ""{tmp}\LibreOffice.msi"" /qn"; Tasks: download_lo; StatusMsg: "Installing LibreOffice (Please wait, this may take 3-5 minutes)..."; Check: FileExists(ExpandConstant('{tmp}\LibreOffice.msi'))
+Filename: "{tmp}\Tesseract.exe"; Parameters: "/S"; Tasks: download_ocr; StatusMsg: "Installing Tesseract OCR..."; Check: FileExists(ExpandConstant('{tmp}\Tesseract.exe'))
 
 [Code]
 var
@@ -148,9 +148,11 @@ begin
         except
           if DownloadPage.AbortedByUser then
             Log('Download aborted by user.')
-          else
-            MsgBox('Error downloading optional components. Please check your internet connection and try again.', mbError, MB_OK);
-          Result := False;
+          else begin
+            // Show warning but continue installation without optional tools
+            MsgBox('Could not download optional tools. The main application will still be installed. You can install LibreOffice and Tesseract manually later.', mbInformation, MB_OK);
+          end;
+          Result := True; // Continue installation anyway
         end;
       finally
         DownloadPage.Hide;
