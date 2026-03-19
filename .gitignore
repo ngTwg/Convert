@@ -25,3 +25,8 @@ installer_output/
 *.tmp
 *.temp
 ~*
+
+# Script files
+push.bat
+*.bat
+*.ps1
