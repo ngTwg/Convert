@@ -14,7 +14,7 @@ powershell -ExecutionPolicy Bypass -File build_installer.ps1 -UseVenv
 ```
 
 **Kết quả:**
-- File installer chuyên nghiệp: `installer_output/MultiConvert_Setup_v1.0.0.exe`
+- File installer chuyên nghiệp: `installer_output/MultiConvert_Setup_v<version>.exe`
 - Người dùng cuối chỉ cần tải và chạy file này!
 
 ---
@@ -24,7 +24,7 @@ powershell -ExecutionPolicy Bypass -File build_installer.ps1 -UseVenv
 ### Cài đặt MultiConvert
 
 1. **Tải file installer**
-   - `MultiConvert_Setup_v1.0.0.exe` (~900 MB)
+   - `MultiConvert_Setup_v<version>.exe` (~200-900 MB tùy cấu hình build)
 
 2. **Chạy installer**
    - Nhấp đúp file `.exe`
@@ -47,7 +47,7 @@ powershell -ExecutionPolicy Bypass -File build_installer.ps1 -UseVenv
 ## Tính Năng Chính / Key Features
 
 ### 1. Chuyển Đổi File
-- **Hỗ trợ 16+ định dạng đầu vào**: MD, HTML, DOCX, PDF, JPG, PNG, ...
+- **Hỗ trợ 19 định dạng đầu vào**: MD, RST, TXT, HTML, DOCX, DOC, ODT, RTF, EPUB, PDF, PPTX, XLSX, CSV, JPG, PNG, TIF, BMP, GIF, WEBP
 - **9 định dạng đầu ra**: PDF, DOCX, HTML, MD, TXT, ...
 - **Tự động tìm đường**: Ứng dụng tự chọn cách tốt nhất để chuyển đổi
 

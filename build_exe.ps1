@@ -10,6 +10,15 @@ $distDir  = "dist\$name"
 $toolsDir = "tools"
 $venvPyinstaller = ".\build_venv\Scripts\pyinstaller.exe"
 
+# ─── Read version from pyproject.toml (single source of truth) ──
+$projectVersion = "0.1.0"
+if (Test-Path "pyproject.toml") {
+    $versionLine = Get-Content "pyproject.toml" | Select-String -Pattern '^version\s*=\s*"([^"]+)"' | Select-Object -First 1
+    if ($versionLine -and $versionLine.Matches.Count -gt 0) {
+        $projectVersion = $versionLine.Matches[0].Groups[1].Value
+    }
+}
+
 # ─── Determine pyinstaller binary ────────────────────────────
 if ($UseVenv -and (Test-Path $venvPyinstaller)) {
     $pyinstallerCmd = $venvPyinstaller
@@ -127,8 +136,9 @@ if (-not $OneFile) {
     }
 
     $readmeContent = @"
-MultiConvert - Công Cụ Chuyển Đổi Tài Liệu Tiếng Việt v1.0
+MultiConvert - Công Cụ Chuyển Đổi Tài Liệu Tiếng Việt v$projectVersion
 ==========================================================
+Copyright: Lê Ngọc Tường, Đại học Khoa học Tự nhiên (HCMUS)
 
 HƯỚNG DẪN SỬ DỤNG:
 - Chỉ cần chạy file MultiConvert.exe để sử dụng ngay.

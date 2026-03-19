@@ -3,8 +3,10 @@
 ; Download Inno Setup from: https://jrsoftware.org/isdl.php
 
 #define MyAppName "MultiConvert"
-#define MyAppVersion "1.0.0"
-#define MyAppPublisher "MultiConvert Team"
+#ifndef MyAppVersion
+  #define MyAppVersion "0.1.0"
+#endif
+#define MyAppPublisher "Lê Ngọc Tường - Đại học Khoa học Tự nhiên (HCMUS)"
 #define MyAppURL "https://github.com/ngTwg/Convert"
 #define MyAppExeName "MultiConvert.exe"
 
@@ -15,16 +17,16 @@ AppId={{A7B8C9D0-E1F2-3456-7890-ABCDEF123456}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
+AppCopyright={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={autopf}\{#MyAppName}
+DefaultDirName={localappdata}\Programs\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 LicenseFile=
 OutputDir=installer_output
 OutputBaseFilename=MultiConvert_Setup_v{#MyAppVersion}
-SetupIconFile=tools\logo.ico
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
@@ -32,13 +34,18 @@ PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 
+#ifexist "tools\logo.ico"
+SetupIconFile=tools\logo.ico
+#endif
+
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
+#ifexist "C:\Program Files (x86)\Inno Setup 6\Languages\Vietnamese.isl"
 Name: "vietnamese"; MessagesFile: "compiler:Languages\Vietnamese.isl"
+#endif
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 6.1; Check: not IsAdminInstallMode
 
 [Files]
 ; Main application files
@@ -50,7 +57,6 @@ Source: "dist\{#MyAppName}\*"; DestDir: "{app}"; Flags: ignoreversion recursesub
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
-Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent

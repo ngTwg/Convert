@@ -1,14 +1,14 @@
 # MultiConvert 🔄
 
 > **Premium desktop file converter & editor for Windows**
-> Convert between 12+ document formats with high quality • Edit output in-app • Batch processing
+> Convert between 19 input formats and 9 output formats with high quality • Edit output in-app • Batch processing
 
 ---
 
 ## ✨ Features
 
 ### 🔄 Multi-Format Conversion
-- **Input**: MD, RST, TXT, HTML, DOCX, DOC, ODT, RTF, EPUB, PDF, PNG, JPG, TIF, BMP, GIF, WEBP
+- **Input (19)**: MD, RST, TXT, HTML, DOCX, DOC, ODT, RTF, EPUB, PDF, PPTX, XLSX, CSV, JPG, PNG, TIF, BMP, GIF, WEBP
 - **Output**: MD, TXT, HTML, DOCX, ODT, RTF, EPUB, PDF, CSV
 - **Auto-routing**: If no direct converter exists (e.g., `md→pdf`), automatically chains through intermediates (`md→html→pdf`)
 
@@ -112,15 +112,29 @@ powershell -ExecutionPolicy Bypass -File build_installer.ps1 -UseVenv
 **Quá trình thực hiện:**
 1. Tự động build file `MultiConvert.exe` từ source code
 2. Tạo Windows Installer (file `.exe`) với giao diện cài đặt chuyên nghiệp
-3. Hỗ trợ song ngữ Việt-Anh trong quá trình cài đặt
+3. Hỗ trợ English + tiếng Việt (nếu máy build có Vietnamese.isl của Inno Setup)
 4. Tự động kiểm tra và thông báo về LibreOffice & Tesseract OCR
 5. Tạo shortcut trên Desktop và Start Menu
 6. Cài đặt uninstaller tự động
+7. Tự động lấy version từ `pyproject.toml` (không cần sửa tay trong installer script)
 
 **Kết quả:**
-- File installer: `installer_output/MultiConvert_Setup_v1.0.0.exe`
+- File installer: `installer_output/MultiConvert_Setup_v<version>.exe` (ví dụ: `installer_output/MultiConvert_Setup_v0.1.0.exe`)
 - Người dùng chỉ cần **tải file .exe và chạy** → cài đặt như app bình thường!
 - Nhấp đúp 2 lần → hiện giao diện cài đặt → Next → Install → Done!
+
+### Hướng dẫn sử dụng nhanh (đúng quy trình phân phối)
+
+1. Build setup:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File build_installer.ps1 -UseVenv
+```
+
+2. Lấy file phát hành trong thư mục `installer_output` với tên `MultiConvert_Setup_v<version>.exe`.
+3. Gửi file setup này cho người dùng.
+4. Người dùng nhấp đúp file setup để cài đặt theo wizard.
+5. Ở màn hình cuối, tick tùy chọn Launch để mở app ngay sau khi cài.
 
 ---
 
@@ -179,7 +193,7 @@ Tool tự động kèm theo Pandoc. Tuy nhiên, một số định dạng sau c�
 
 **Output Locations:**
 - EXE: `dist/MultiConvert/MultiConvert.exe`
-- Installer: `installer_output/MultiConvert_Setup_v1.0.0.exe`
+- Installer: `installer_output/MultiConvert_Setup_v<version>.exe`
 
 ---
 
@@ -260,3 +274,4 @@ Then pass `--plugin-dir ./plugins` to load them.
 - LibreOffice: LGPL
 - Tesseract: Apache 2.0
 - MultiConvert: MIT
+- Copyright holder: Lê Ngọc Tường, Đại học Khoa học Tự nhiên (HCMUS)

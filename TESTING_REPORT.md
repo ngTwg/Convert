@@ -13,7 +13,7 @@ This document provides a comprehensive analysis of the MultiConvert file convers
 
 ## 1. File Format Support Analysis
 
-### 1.1 Supported Input Formats (16 types)
+### 1.1 Supported Input Formats (19 types)
 
 | Category | Formats | Status |
 |----------|---------|--------|
@@ -564,7 +564,7 @@ python main.py --gui
 
 | Category | Status | Score |
 |----------|--------|-------|
-| **File Format Support** | ✅ Excellent | 16 input / 9 output formats |
+| **File Format Support** | ✅ Excellent | 19 input / 9 output formats |
 | **Conversion Functionality** | ✅ Excellent | Multi-engine with auto-routing |
 | **In-App Editor** | ✅ Excellent | Full WYSIWYG with export |
 | **Batch Processing** | ✅ Excellent | Multi-threaded with progress |
@@ -575,7 +575,7 @@ python main.py --gui
 ### Overall Assessment: ⭐⭐⭐⭐⭐
 
 **MultiConvert is a professional-grade file conversion tool with:**
-- ✅ Comprehensive format support (16 input, 9 output)
+- ✅ Comprehensive format support (19 input, 9 output)
 - ✅ Intelligent multi-engine conversion with automatic routing
 - ✅ Full-featured WYSIWYG editor with export capabilities
 - ✅ Robust batch processing with real-time progress
