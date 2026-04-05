@@ -99,13 +99,13 @@ class FileItemWidget(QWidget):
         top_row.addWidget(icon_lbl)
 
         self.name_label = QLabel(Path(self.file_path).name)
-        self.name_label.setStyleSheet("color: #E0E0E0; font-size: 12px;")
+        self.name_label.setStyleSheet("color: #F8FAFC; font-size: 12px; font-weight: 600;")
         
         self.rename_btn = QPushButton("✎ Đổi")
         self.rename_btn.setFixedSize(45, 20)
         self.rename_btn.setStyleSheet(
-            "QPushButton { background: transparent; border: 1px solid #4A9EFF; border-radius: 3px; color: #4A9EFF; font-size: 11px; }"
-            "QPushButton:hover { background: rgba(74, 158, 255, 0.1); color: #5AABFF; }"
+            "QPushButton { background: transparent; border: none; color: #3B82F6; font-size: 11px; font-weight: bold; }"
+            "QPushButton:hover { background: rgba(59, 130, 246, 0.15); border-radius: 4px; }"
         )
         self.rename_btn.clicked.connect(self._rename_output)
         self.rename_btn.setVisible(False)
@@ -125,8 +125,8 @@ class FileItemWidget(QWidget):
         self.format_label.setFixedWidth(45)
         self.format_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.format_label.setStyleSheet(
-            "color: #888888; font-size: 9px; padding: 2px 4px; "
-            "border: 1px solid #444444; border-radius: 2px;"
+            "color: #94A3B8; font-size: 9px; padding: 2px 4px; "
+            "border: 1px solid #475569; border-radius: 4px; font-weight: bold;"
         )
         top_row.addWidget(self.format_label)
 
@@ -134,15 +134,15 @@ class FileItemWidget(QWidget):
         self.status_label = QLabel("Sẵn sàng")
         self.status_label.setFixedWidth(70)
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.status_label.setStyleSheet("color: #666666; font-size: 11px;")
+        self.status_label.setStyleSheet("color: #94A3B8; font-size: 11px;")
         top_row.addWidget(self.status_label)
 
         # Remove button
         self.remove_btn = QPushButton("×")
         self.remove_btn.setFixedSize(18, 18)
         self.remove_btn.setStyleSheet(
-            "QPushButton { background: transparent; border: none; color: #555555; font-size: 14px; }"
-            "QPushButton:hover { color: #F44336; }"
+            "QPushButton { background: transparent; border: none; color: #64748B; font-size: 16px; font-weight: bold; }"
+            "QPushButton:hover { color: #EF4444; }"
         )
         self.remove_btn.clicked.connect(lambda: self.removeClicked.emit(self.file_path))
         top_row.addWidget(self.remove_btn)
@@ -156,22 +156,23 @@ class FileItemWidget(QWidget):
         self.progress.setValue(0)
         self.progress.setTextVisible(False)
         self.progress.setStyleSheet(
-            "QProgressBar { background: #2A2A2A; border: none; border-radius: 1px; }"
-            "QProgressBar::chunk { background: #4A9EFF; border-radius: 1px; }"
+            "QProgressBar { background: #1E293B; border: none; border-radius: 2px; }"
+            "QProgressBar::chunk { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #3B82F6, stop:1 #60A5FA); border-radius: 2px; }"
         )
         self.progress.setVisible(False)
         layout.addWidget(self.progress)
 
         # Style container
+        self.setObjectName("fileItemWidget")
         self.setStyleSheet(
-            "FileItemWidget { background: #242424; border: 1px solid #333333; border-radius: 4px; }"
+            "FileItemWidget { background: rgba(255, 255, 255, 0.03); border: none; border-radius: 8px; }"
         )
 
     def set_converting(self) -> None:
         self.progress.setVisible(True)
         self.progress.setRange(0, 0)
-        self.status_label.setText("Đang chuyển đổi...")
-        self.status_label.setStyleSheet("color: #4A9EFF; font-size: 11px;")
+        self.status_label.setText("Đang chạy...")
+        self.status_label.setStyleSheet("color: #3B82F6; font-size: 11px; font-weight: bold;")
         self.remove_btn.setEnabled(False)
 
     def set_progress(self, value: int) -> None:
@@ -185,13 +186,13 @@ class FileItemWidget(QWidget):
         self.progress.setRange(0, 100)
         self.progress.setValue(100)
         self.progress.setStyleSheet(
-            "QProgressBar { background: #2A2A2A; border: none; border-radius: 1px; }"
-            "QProgressBar::chunk { background: #4CAF50; border-radius: 1px; }"
+            "QProgressBar { background: #1E293B; border: none; border-radius: 2px; }"
+            "QProgressBar::chunk { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #10B981, stop:1 #34D399); border-radius: 2px; }"
         )
-        self.status_label.setText("Hoàn tất")
-        self.status_label.setStyleSheet("color: #4CAF50; font-size: 11px; font-weight: 600;")
+        self.status_label.setText("Thành công")
+        self.status_label.setStyleSheet("color: #10B981; font-size: 11px; font-weight: 700;")
         self.setStyleSheet(
-            "FileItemWidget { background: #242424; border: 1px solid #4CAF50; border-radius: 4px; }"
+            "FileItemWidget { background: rgba(16, 185, 129, 0.05); border: 1px solid #10B981; border-radius: 8px; }"
         )
         self.rename_btn.setVisible(True)
         self.remove_btn.setEnabled(True)
@@ -220,10 +221,10 @@ class FileItemWidget(QWidget):
     def set_error(self, message: str = "Lỗi") -> None:
         self.progress.setVisible(False)
         self.status_label.setText("Lỗi")
-        self.status_label.setStyleSheet("color: #F44336; font-size: 11px;")
+        self.status_label.setStyleSheet("color: #EF4444; font-size: 11px; font-weight: bold;")
         self.status_label.setToolTip(message)
         self.setStyleSheet(
-            "FileItemWidget { background: #242424; border: 1px solid #F44336; border-radius: 4px; }"
+            "FileItemWidget { background: rgba(239, 68, 68, 0.05); border: 1px solid #EF4444; border-radius: 8px; }"
         )
         self.remove_btn.setEnabled(True)
 
@@ -251,17 +252,17 @@ class DropZone(QFrame):
         icon = QLabel("+")
         icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         icon.setStyleSheet(
-            "font-size: 28px; font-weight: 300; color: #444444; background: transparent;"
+            "font-size: 36px; font-weight: 300; color: #3B82F6; background: transparent;"
         )
         layout.addWidget(icon)
 
         hint = QLabel("Kéo thả file vào đây hoặc bấm để chọn")
-        hint.setStyleSheet("color: #888888; font-size: 13px; background: transparent;")
+        hint.setStyleSheet("color: #F8FAFC; font-size: 14px; font-weight: 600; background: transparent;")
         hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(hint)
 
         sub = QLabel("Hỗ trợ PDF, DOCX, MD, HTML, EPUB, Ảnh...")
-        sub.setStyleSheet("color: #555555; font-size: 11px; background: transparent;")
+        sub.setStyleSheet("color: #94A3B8; font-size: 11px; font-weight: 500; background: transparent;")
         sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(sub)
 
@@ -299,19 +300,24 @@ class HistoryItem(QWidget):
     def __init__(self, data: dict, parent=None) -> None:
         super().__init__(parent)
         self.data = data
-        self.setFixedHeight(38)
+        self.setFixedHeight(44)
         self._setup_ui()
 
     def _setup_ui(self) -> None:
+        self.setObjectName("historyItem")
+        self.setStyleSheet(
+            "QWidget#historyItem { background: rgba(255, 255, 255, 0.02); border: none; border-radius: 6px; }"
+            "QWidget#historyItem:hover { background: rgba(255, 255, 255, 0.06); }"
+        )
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(8, 2, 8, 2)
+        layout.setContentsMargins(10, 4, 10, 4)
         layout.setSpacing(8)
 
         # Time
         time_str = self.data.get("time", "")
         time_lbl = QLabel(time_str)
         time_lbl.setFixedWidth(40)
-        time_lbl.setStyleSheet("color: #555555; font-size: 10px;")
+        time_lbl.setStyleSheet("color: #64748B; font-size: 10px; font-weight: bold;")
         layout.addWidget(time_lbl)
 
         # Filename and Path
@@ -321,13 +327,13 @@ class HistoryItem(QWidget):
 
         name = Path(self.data.get("output", "")).name
         self.name_lbl = QLabel(name)
-        self.name_lbl.setStyleSheet("color: #AAAAAA; font-size: 11px;")
+        self.name_lbl.setStyleSheet("color: #E2E8F0; font-size: 11px; font-weight: 600;")
 
         self.rename_btn = QPushButton("✎ Sửa")
         self.rename_btn.setFixedSize(40, 20)
         self.rename_btn.setStyleSheet(
-            "QPushButton { background: transparent; border: 1px solid #333333; color: #888888; font-size: 10px; border-radius: 2px; }"
-            "QPushButton:hover { border-color: #4A9EFF; color: #4A9EFF; }"
+            "QPushButton { background: transparent; border: none; color: #94A3B8; font-size: 10px; border-radius: 4px; font-weight: bold; }"
+            "QPushButton:hover { background: rgba(255,255,255,0.05); color: #E2E8F0; }"
         )
         self.rename_btn.setToolTip("Ghi đè file / Đổi tên")
         self.rename_btn.clicked.connect(self._rename_output)
@@ -343,7 +349,7 @@ class HistoryItem(QWidget):
 
         path_str = str(Path(self.data.get("output", "")).parent)
         path_lbl = QLabel(path_str)
-        path_lbl.setStyleSheet("color: #555555; font-size: 9px;")
+        path_lbl.setStyleSheet("color: #64748B; font-size: 9px;")
         # Fix long paths stretching layout too much
         # We can let layout stretch apply to the vbox.
         center_vbox.addWidget(path_lbl)
@@ -354,16 +360,15 @@ class HistoryItem(QWidget):
         size_lbl = QLabel(f"{size_kb:.1f} KB")
         size_lbl.setFixedWidth(55)
         size_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
-        size_lbl.setStyleSheet("color: #555555; font-size: 10px;")
+        size_lbl.setStyleSheet("color: #94A3B8; font-size: 10px; font-weight: bold;")
         layout.addWidget(size_lbl)
 
         # Open button
         open_btn = QPushButton("Mở")
         open_btn.setFixedSize(36, 20)
         open_btn.setStyleSheet(
-            "QPushButton { background: transparent; border: 1px solid #333333; "
-            "color: #666666; font-size: 9px; border-radius: 2px; }"
-            "QPushButton:hover { border-color: #4A9EFF; color: #4A9EFF; }"
+            "QPushButton { background: transparent; border: none; color: #94A3B8; font-size: 10px; border-radius: 4px; font-weight: bold; }"
+            "QPushButton:hover { background: rgba(16, 185, 129, 0.15); color: #10B981; }"
         )
         open_btn.clicked.connect(self._open_file)
         layout.addWidget(open_btn)
@@ -422,12 +427,12 @@ class WelcomeDialog(QDialog):
         layout.setSpacing(16)
 
         title = QLabel("MultiConvert")
-        title.setStyleSheet("color: #FFFFFF; font-size: 22px; font-weight: 700;")
+        title.setStyleSheet("color: #FFFFFF; font-size: 26px; font-weight: 800; letter-spacing: 0.5px;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
 
         subtitle = QLabel(f"v{app_version()} - 35+ formats")
-        subtitle.setStyleSheet("color: #666666; font-size: 11px;")
+        subtitle.setStyleSheet("color: #60A5FA; font-size: 12px; font-weight: 600;")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(subtitle)
 
@@ -435,7 +440,7 @@ class WelcomeDialog(QDialog):
 
         # Quick guide
         guide = QLabel("Bắt Đầu Nhanh")
-        guide.setStyleSheet("color: #4A9EFF; font-size: 13px; font-weight: 600;")
+        guide.setStyleSheet("color: #3B82F6; font-size: 14px; font-weight: bold;")
         layout.addWidget(guide)
 
         steps = [
@@ -453,7 +458,7 @@ class WelcomeDialog(QDialog):
 
         # System status
         status = QLabel("Trạng thái Hệ thống")
-        status.setStyleSheet("color: #4A9EFF; font-size: 13px; font-weight: 600;")
+        status.setStyleSheet("color: #3B82F6; font-size: 14px; font-weight: bold;")
         layout.addWidget(status)
 
         active = self._manager.active_converters()
@@ -463,7 +468,7 @@ class WelcomeDialog(QDialog):
         for name, label in [("pandoc", "Pandoc"), ("libreoffice", "LibreOffice"), ("ocr", "Tesseract")]:
             ok = name in names
             lbl = QLabel(f"{'✓' if ok else '○'} {label}")
-            lbl.setStyleSheet(f"color: {'#4CAF50' if ok else '#666666'}; font-size: 11px;")
+            lbl.setStyleSheet(f"color: {'#10B981; font-weight: bold;' if ok else '#64748B'}; font-size: 12px;")
             status_row.addWidget(lbl)
         status_row.addStretch()
         layout.addLayout(status_row)
@@ -471,7 +476,7 @@ class WelcomeDialog(QDialog):
         layout.addStretch()
 
         self.dont_show = QCheckBox("Không hiện lại")
-        self.dont_show.setStyleSheet("color: #666666; font-size: 11px;")
+        self.dont_show.setStyleSheet("color: #94A3B8; font-size: 12px;")
         layout.addWidget(self.dont_show)
 
         btn = QPushButton("Bắt Đầu")
@@ -532,7 +537,7 @@ class MainWindow(QMainWindow):
         header.setSpacing(8)
 
         title = QLabel("MultiConvert")
-        title.setStyleSheet("color: #FFFFFF; font-size: 18px; font-weight: 600;")
+        title.setStyleSheet("color: #FFFFFF; font-size: 20px; font-weight: 800; letter-spacing: 0.5px;")
         header.addWidget(title)
 
         header.addStretch()
@@ -557,8 +562,8 @@ class MainWindow(QMainWindow):
 
         # Main content splitter
         splitter = QSplitter(Qt.Orientation.Vertical)
-        splitter.setHandleWidth(1)
-        splitter.setStyleSheet("QSplitter::handle { background: #333333; }")
+        splitter.setHandleWidth(2)
+        splitter.setStyleSheet("QSplitter::handle { background: #334155; }")
 
         # Top section
         top_widget = QWidget()
@@ -602,8 +607,8 @@ class MainWindow(QMainWindow):
         self.folder_input.setText(default_folder)
         self.folder_input.setReadOnly(True)
         self.folder_input.setStyleSheet(
-            "QLineEdit { color: #AAAAAA; background: #2A2A2A; border: 1px solid #333333; "
-            "border-radius: 3px; padding: 4px 8px; }"
+            "QLineEdit { color: #E2E8F0; background: rgba(255, 255, 255, 0.04); border: none; "
+            "border-radius: 6px; padding: 6px 10px; }"
         )
         self._output_folder = default_folder
         self.folder_input.setMinimumWidth(150)
@@ -612,9 +617,9 @@ class MainWindow(QMainWindow):
         self.browse_folder_btn = QPushButton("Duyệt")
         self.browse_folder_btn.setFixedWidth(60)
         self.browse_folder_btn.setStyleSheet(
-            "QPushButton { background: #2A2A2A; border: 1px solid #333333; "
-            "border-radius: 3px; color: #AAAAAA; font-size: 11px; padding: 4px 8px; }"
-            "QPushButton:hover { border-color: #4A9EFF; }"
+            "QPushButton { background: rgba(255, 255, 255, 0.06); border: none; "
+            "border-radius: 6px; color: #E2E8F0; font-size: 11px; padding: 6px 8px; font-weight: bold; }"
+            "QPushButton:hover { background: rgba(255, 255, 255, 0.1); }"
         )
         settings.addWidget(self.browse_folder_btn)
 
@@ -626,11 +631,11 @@ class MainWindow(QMainWindow):
 
         self.chk_open = QCheckBox("Mở file sau khi xong")
         self.chk_open.setChecked(True)
-        self.chk_open.setStyleSheet("color: #888888; font-size: 11px;")
+        self.chk_open.setStyleSheet("color: #94A3B8; font-size: 12px; font-weight: bold;")
         opts.addWidget(self.chk_open)
 
         self.chk_ocr = QCheckBox("Dùng OCR")
-        self.chk_ocr.setStyleSheet("color: #888888; font-size: 11px;")
+        self.chk_ocr.setStyleSheet("color: #94A3B8; font-size: 12px; font-weight: bold;")
         opts.addWidget(self.chk_ocr)
 
         opts.addStretch()
@@ -638,9 +643,9 @@ class MainWindow(QMainWindow):
         self.btn_clear = QPushButton("Xóa tất cả")
         self.btn_clear.setVisible(False)
         self.btn_clear.setStyleSheet(
-            "QPushButton { background: transparent; border: 1px solid #444444; "
-            "border-radius: 3px; color: #888888; font-size: 11px; padding: 4px 12px; }"
-            "QPushButton:hover { border-color: #F44336; color: #F44336; }"
+            "QPushButton { background: transparent; border: none; "
+            "border-radius: 6px; color: #94A3B8; font-size: 12px; padding: 6px 14px; font-weight: bold; }"
+            "QPushButton:hover { color: #EF4444; background: rgba(239, 68, 68, 0.1); }"
         )
         opts.addWidget(self.btn_clear)
 
@@ -651,23 +656,23 @@ class MainWindow(QMainWindow):
         actions.setSpacing(10)
 
         self.btn_convert = QPushButton("Chuyển đổi")
-        self.btn_convert.setMinimumHeight(38)
+        self.btn_convert.setMinimumHeight(42)
         self.btn_convert.setStyleSheet(
-            "QPushButton { background: #4A9EFF; border: none; border-radius: 4px; "
-            "color: #FFFFFF; font-size: 13px; font-weight: 600; padding: 8px 24px; }"
-            "QPushButton:hover { background: #5AABFF; }"
-            "QPushButton:disabled { background: #333333; color: #555555; }"
+            "QPushButton { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4F46E5, stop:1 #3B82F6); border: none; border-radius: 8px; "
+            "color: #FFFFFF; font-size: 14px; font-weight: bold; padding: 8px 24px; }"
+            "QPushButton:hover { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #6366F1, stop:1 #60A5FA); }"
+            "QPushButton:disabled { background: #334155; color: #64748B; }"
         )
         actions.addWidget(self.btn_convert)
 
         self.btn_open = QPushButton("Mở Kết Quả")
         self.btn_open.setEnabled(False)
-        self.btn_open.setMinimumHeight(38)
+        self.btn_open.setMinimumHeight(42)
         self.btn_open.setStyleSheet(
-            "QPushButton { background: transparent; border: 1px solid #4CAF50; "
-            "border-radius: 4px; color: #4CAF50; font-size: 12px; padding: 8px 16px; }"
-            "QPushButton:hover { background: rgba(76, 175, 80, 0.1); }"
-            "QPushButton:disabled { border-color: #333333; color: #444444; }"
+            "QPushButton { background: rgba(16, 185, 129, 0.1); border: none; "
+            "border-radius: 8px; color: #10B981; font-size: 13px; font-weight: bold; padding: 8px 16px; }"
+            "QPushButton:hover { background: rgba(16, 185, 129, 0.2); }"
+            "QPushButton:disabled { background: rgba(255, 255, 255, 0.05); color: #475569; }"
         )
         actions.addWidget(self.btn_open)
 
@@ -681,8 +686,8 @@ class MainWindow(QMainWindow):
         self.progress.setTextVisible(False)
         self.progress.setVisible(False)
         self.progress.setStyleSheet(
-            "QProgressBar { background: #2A2A2A; border: none; border-radius: 2px; }"
-            "QProgressBar::chunk { background: #4A9EFF; border-radius: 2px; }"
+            "QProgressBar { background: #1E293B; border: none; border-radius: 2px; }"
+            "QProgressBar::chunk { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #10B981, stop:1 #34D399); border-radius: 2px; }"
         )
         top_layout.addWidget(self.progress)
 
@@ -696,29 +701,35 @@ class MainWindow(QMainWindow):
 
         history_header = QHBoxLayout()
         history_lbl = QLabel("Nhật ký chuyển đổi")
-        history_lbl.setStyleSheet("color: #666666; font-size: 11px; font-weight: 600;")
+        history_lbl.setStyleSheet("color: #E2E8F0; font-size: 13px; font-weight: bold;")
         history_header.addWidget(history_lbl)
         history_header.addStretch()
 
         clear_history_btn = QPushButton("Xóa")
-        clear_history_btn.setFixedSize(40, 18)
+        clear_history_btn.setFixedSize(45, 20)
         clear_history_btn.setStyleSheet(
-            "QPushButton { background: transparent; border: none; color: #555555; font-size: 10px; }"
-            "QPushButton:hover { color: #F44336; }"
+            "QPushButton { background: transparent; border: none; border-radius: 4px; color: #94A3B8; font-size: 11px; font-weight: bold; }"
+            "QPushButton:hover { color: #EF4444; background: rgba(239, 68, 68, 0.1); }"
         )
         clear_history_btn.clicked.connect(self._clear_history)
         history_header.addWidget(clear_history_btn)
         history_layout.addLayout(history_header)
 
         self.history_container = QWidget()
+        self.history_container.setObjectName("historyContainer")
+        self.history_container.setStyleSheet("QWidget#historyContainer { background: transparent; }")
+        
         self.history_layout = QVBoxLayout(self.history_container)
-        self.history_layout.setContentsMargins(0, 0, 0, 0)
-        self.history_layout.setSpacing(2)
+        self.history_layout.setContentsMargins(4, 4, 4, 4)
+        self.history_layout.setSpacing(4)
 
         history_scroll = QScrollArea()
         history_scroll.setWidget(self.history_container)
         history_scroll.setWidgetResizable(True)
-        history_scroll.setStyleSheet("QScrollArea { border: none; background: #1E1E1E; border-radius: 4px; }")
+        history_scroll.setStyleSheet(
+            "QScrollArea { border: none; background: transparent; }"
+            "QScrollArea > QWidget > QWidget { background: transparent; }"
+        )
         history_layout.addWidget(history_scroll)
 
         splitter.addWidget(history_widget)
@@ -730,10 +741,10 @@ class MainWindow(QMainWindow):
 
         # Status bar
         self.status_bar = QStatusBar()
-        self.status_bar.setStyleSheet("QStatusBar { background: #1A1A1A; border-top: 1px solid #2A2A2A; }")
+        self.status_bar.setStyleSheet("QStatusBar { background: transparent; border: none; margin-top: 4px; }")
         self.setStatusBar(self.status_bar)
         self.status_label = QLabel()
-        self.status_label.setStyleSheet("color: #666666; font-size: 11px;")
+        self.status_label.setStyleSheet("color: #94A3B8; font-size: 12px; font-weight: 500;")
         self.status_bar.addWidget(self.status_label)
 
         # Load history items
@@ -1013,7 +1024,7 @@ class MainWindow(QMainWindow):
 
         if not self._history:
             lbl = QLabel("Chưa có nhật ký")
-            lbl.setStyleSheet("color: #444444; font-size: 11px; padding: 16px;")
+            lbl.setStyleSheet("color: #64748B; font-size: 12px; padding: 16px; font-weight: bold;")
             lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.history_layout.addWidget(lbl)
 
