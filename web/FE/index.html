@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MultiConvert Pro - Enterprise</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class='bx bx-analyse logo-icon'></i>
+                <div class="logo-text">
+                    <h2>MultiConvert</h2>
+                    <span>Enterprise</span>
+                </div>
+            </div>
+
+            <div class="sidebar-menu-container">
+                <ul class="sidebar-menu">
+                    <li class="menu-label">Chức năng cốt lõi</li>
+                    <li class="menu-item active" data-target="home">
+                        <i class='bx bx-refresh'></i> <span>Đa Chuyển Đổi (Universal)</span>
+                    </li>
+
+                    <li class="menu-label">Sắp xếp PDF</li>
+                    <li class="menu-item" data-target="tool" data-tool="merge" data-title="Nối PDF">
+                        <i class='bx bx-git-merge text-red'></i> <span>Nối PDF</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="split" data-title="Tách PDF">
+                        <i class='bx bx-git-branch text-red'></i> <span>Tách PDF</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="remove_pages" data-title="Loại bỏ trang">
+                        <i class='bx bx-minus-circle text-orange'></i> <span>Loại bỏ trang</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="extract" data-title="Xuất trang">
+                        <i class='bx bx-export text-orange'></i> <span>Xuất trang</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="organize" data-title="Sắp xếp PDF">
+                        <i class='bx bx-sort text-orange'></i> <span>Sắp xếp PDF</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="scan" data-title="Quét thành PDF">
+                        <i class='bx bx-scan text-orange'></i> <span>Quét thành PDF</span>
+                    </li>
+
+                    <li class="menu-label">Tối ưu hóa PDF</li>
+                    <li class="menu-item" data-target="tool" data-tool="compress" data-title="Nén PDF">
+                        <i class='bx bx-collapse text-green'></i> <span>Nén PDF</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="repair" data-title="Sửa tệp PDF">
+                        <i class='bx bx-wrench text-green'></i> <span>Sửa tệp PDF</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="ocr" data-title="OCR PDF">
+                        <i class='bx bx-text text-green'></i> <span>OCR PDF</span>
+                    </li>
+
+                    <li class="menu-label">Chuyển SANG PDF</li>
+                    <li class="menu-item" data-target="tool" data-tool="img_to_pdf" data-title="JPG sang PDF">
+                        <i class='bx bx-image text-yellow'></i> <span>JPG sang PDF</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="word_to_pdf" data-title="WORD sang PDF">
+                        <i class='bx bxs-file-doc text-blue'></i> <span>WORD sang PDF</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="ppt_to_pdf" data-title="POWERPOINT sang PDF">
+                        <i class='bx bxs-file-blank text-orange'></i> <span>POWERPOINT sang PDF</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="excel_to_pdf" data-title="EXCEL sang PDF">
+                        <i class='bx bxs-spreadsheet text-green'></i> <span>EXCEL sang PDF</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="html_to_pdf" data-title="HTML sang PDF">
+                        <i class='bx bxl-html5 text-orange'></i> <span>HTML sang PDF</span>
+                    </li>
+
+                    <li class="menu-label">Chuyển ĐỔI TỪ PDF</li>
+                    <li class="menu-item" data-target="tool" data-tool="pdf_to_img" data-title="PDF sang JPG">
+                        <i class='bx bxs-file-pdf text-yellow'></i> <span>PDF sang JPG</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="pdf_to_word" data-title="PDF sang WORD">
+                        <i class='bx bxs-file-pdf text-blue'></i> <span>PDF sang WORD</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="pdf_to_ppt" data-title="PDF sang POWERPOINT">
+                        <i class='bx bxs-file-pdf text-orange'></i> <span>PDF sang POWERPOINT</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="pdf_to_excel" data-title="PDF sang EXCEL">
+                        <i class='bx bxs-file-pdf text-green'></i> <span>PDF sang EXCEL</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="pdf_to_pdfa" data-title="PDF sang PDF/A">
+                        <i class='bx bxs-file-pdf text-blue-dark'></i> <span>PDF sang PDF/A</span>
+                    </li>
+
+                    <li class="menu-label">Chỉnh sửa PDF</li>
+                    <li class="menu-item" data-target="tool" data-tool="rotate" data-title="Xoay PDF">
+                        <i class='bx bx-rotate-right text-purple'></i> <span>Xoay PDF</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="add_page_num" data-title="Thêm số trang">
+                        <i class='bx bx-sort-numeric-down text-purple'></i> <span>Thêm số trang</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="watermark" data-title="Thêm dấu bản quyền">
+                        <i class='bx bx-water text-purple'></i> <span>Thêm dấu bản quyền</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="crop" data-title="Cắt cúp PDF">
+                        <i class='bx bx-crop text-purple'></i> <span>Cắt cúp PDF</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="edit" data-title="Chỉnh sửa PDF">
+                        <i class='bx bx-edit text-purple'></i> <span>Chỉnh sửa PDF</span>
+                    </li>
+
+                    <li class="menu-label">Bảo mật PDF</li>
+                    <li class="menu-item" data-target="tool" data-tool="unlock" data-title="Mở khóa PDF">
+                        <i class='bx bx-lock-open-alt text-blue-dark'></i> <span>Mở khóa PDF</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="protect" data-title="Bảo vệ PDF">
+                        <i class='bx bx-shield-quarter text-blue-dark'></i> <span>Bảo vệ PDF</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="sign" data-title="Ký tên PDF">
+                        <i class='bx bx-pen text-blue-dark'></i> <span>Ký tên PDF</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="redact" data-title="Biên tập PDF">
+                        <i class='bx bx-hide text-blue-dark'></i> <span>Biên tập PDF</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="compare" data-title="So sánh PDF">
+                        <i class='bx bx-git-compare text-blue-dark'></i> <span>So sánh PDF</span>
+                    </li>
+
+                    <li class="menu-label">Trí tuệ Nhân tạo (AI Analytics)</li>
+                    <li class="menu-item" data-target="tool" data-tool="ai_summarize" data-title="Tóm tắt tài liệu AI">
+                        <i class='bx bx-brain text-purple'></i> <span>Tóm tắt tài liệu AI</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="ai_translate" data-title="Dịch thuật Dữ liệu">
+                        <i class='bx bx-globe text-blue'></i> <span>Dịch thuật Dữ liệu</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="ai_grammar" data-title="Sửa lỗi ngữ pháp">
+                        <i class='bx bx-check-double text-green'></i> <span>Sửa lỗi ngữ pháp</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="ai_table_ocr" data-title="Trích xuất Bảng (Table OCR)">
+                        <i class='bx bx-table text-orange'></i> <span>Trích xuất Bảng (AI)</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="ai_tts" data-title="Đọc thành tiếng (TTS)">
+                        <i class='bx bx-volume-full text-purple'></i> <span>Đọc thành tiếng (TTS)</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="ai_stt" data-title="Bóc băng ghi âm (STT)">
+                        <i class='bx bx-microphone text-red'></i> <span>Bóc băng ghi âm (STT)</span>
+                    </li>
+
+                    <li class="menu-label">Xử lý Hình ảnh (Image Utils)</li>
+                    <li class="menu-item" data-target="tool" data-tool="img_remove_bg" data-title="Xóa phông nền (AI)">
+                        <i class='bx bx-image-alt text-blue-dark'></i> <span>Xóa phông nền</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="img_upscale" data-title="Nâng cấp độ phân giải 4K">
+                        <i class='bx bx-expand text-yellow'></i> <span>Nâng cấp lên 4K</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="img_compress" data-title="Nén ảnh không nhiễu">
+                        <i class='bx bx-collapse text-green'></i> <span>Nén ảnh xuất sắc</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="heic_to_jpg" data-title="HEIC sang JPG">
+                        <i class='bx bxs-file-image text-orange'></i> <span>HEIC sang JPG</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="svg_to_png" data-title="SVG sang PNG">
+                        <i class='bx bx-vector text-purple'></i> <span>SVG sang PNG</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="img_watermark" data-title="Đóng dấu bản quyền ảnh">
+                        <i class='bx bx-water text-blue'></i> <span>Đóng dấu hàng loạt</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="qr_generator" data-title="Tạo mã QR/Barcode">
+                        <i class='bx bx-qr-scan text-main'></i> <span>Tạo Code (QR/Barcode)</span>
+                    </li>
+
+                    <li class="menu-label">Studio Âm thanh & Video</li>
+                    <li class="menu-item" data-target="tool" data-tool="video_to_mp3" data-title="Video sang MP3">
+                        <i class='bx bx-music text-purple'></i> <span>Video sang MP3</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="video_compress" data-title="Nén MP4 H.265">
+                        <i class='bx bx-video-recording text-blue-dark'></i> <span>Nén Video MP4</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="media_trim" data-title="Cắt xén Media (Trimmer)">
+                        <i class='bx bx-cut text-red'></i> <span>Cắt Video/Âm thanh</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="video_to_gif" data-title="Video sang GIF">
+                        <i class='bx bx-film text-orange'></i> <span>Video sang GIF</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="audio_merge" data-title="Hợp nhất Nhạc">
+                        <i class='bx bx-library text-green'></i> <span>Hợp nhất Nhạc</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="audio_split" data-title="Tách Vocal/Beat nhạc">
+                        <i class='bx bx-equalizer text-purple'></i> <span>Tách Ca sĩ / Beat</span>
+                    </li>
+
+                    <li class="menu-label">Lập trình & Kỹ thuật số</li>
+                    <li class="menu-item" data-target="tool" data-tool="dev_format" data-title="Chuẩn hóa JSON/XML">
+                        <i class='bx bx-code-alt text-main'></i> <span>Làm đẹp JSON/XML</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="dev_diff" data-title="So sánh Code/Khác biệt">
+                        <i class='bx bx-git-compare text-yellow'></i> <span>So sánh Code Khác biệt</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="dev_pass_gen" data-title="Mật khẩu Siêu cấp">
+                        <i class='bx bx-key text-red'></i> <span>Sinh mật khẩu an toàn</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="dev_base64" data-title="Base64 Decoder">
+                        <i class='bx bx-transfer-alt text-blue'></i> <span>Dịch / Giải mã Base64</span>
+                    </li>
+
+                    <li class="menu-label">Tái cấu trúc & Dữ liệu</li>
+                    <li class="menu-item" data-target="tool" data-tool="json_to_csv" data-title="JSON sang CSV">
+                        <i class='bx bx-data text-orange'></i> <span>JSON sang CSV</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="xml_to_excel" data-title="XML sang Excel">
+                        <i class='bx bx-spreadsheet text-green'></i> <span>XML sang Excel</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="excel_dedupe" data-title="Lọc Dữ liệu Trùng lặp">
+                        <i class='bx bx-filter text-purple'></i> <span>Lọc Trùng lặp Dữ liệu</span>
+                    </li>
+                    <li class="menu-item" data-target="tool" data-tool="excel_merge" data-title="Hợp nhất mọi Sheet Excel">
+                        <i class='bx bx-layer text-blue-dark'></i> <span>Hợp nhất các Sheet</span>
+                    </li>
+                </ul>
+                <div style="height: 30px;"></div>
+            </div>
+        </aside>
+
+        <!-- MAIN LAYOUT -->
+        <main class="main-layout">
+            <!-- TOP NAVBAR -->
+            <header class="topbar">
+                <div class="breadcrumb" id="breadcrumbArea">
+                    <h2 id="topbarTitle">Chuyển đổi Đa Năng</h2>
+                </div>
+                <div class="topbar-actions">
+                    <button class="btn-icon" style="color:var(--success-color); border-color:var(--success-color);" id="btnConnectionStatus" title="Offline Mode - Using Internal JS Engine"><i class='bx bx-wifi-off'></i></button>
+                    <button class="btn-icon"><i class='bx bx-bell'></i><span class="badge"></span></button>
+                    <button class="btn-icon"><i class='bx bx-cog'></i></button>
+                    <div class="user-profile">
+                        <img src="https://ui-avatars.com/api/?name=Admin&background=2563EB&color=fff" alt="User">
+                        <div class="user-meta">
+                            <span class="user-name">Quản trị viên</span>
+                            <span class="user-plan">Gói Enterprise</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- CONTENT AREA -->
+            <div class="content-wrapper">
+                
+                <!-- VIEW 1: HOME (UNIVERSAL CONVERTER) -->
+                <div id="viewHome" class="view-section active">
+                    <div class="welcome-banner">
+                        <div class="banner-text">
+                            <h1 class="gradient-text">Nền tảng Xử lý Tài liệu Đa năng</h1>
+                            <p>Thiết kế dành riêng cho doanh nghiệp. Kéo thả file của bạn để trải nghiệm tốc độ chuyển đổi và độ chính xác tuyệt đối.</p>
+                        </div>
+                        <img src="https://cdn-icons-png.flaticon.com/512/3218/3218451.png" alt="Illustration" class="banner-img">
+                    </div>
+
+                    <div class="converter-board">
+                        <div class="board-header">
+                            <h3><i class='bx bx-bolt-circle'></i> Tiện ích Chuyển đổi Thông minh</h3>
+                        </div>
+                        <div class="board-body">
+                            <!-- Universal Dropzone -->
+                            <div class="upload-section universal-upload active" id="homeDropzone">
+                                <input type="file" id="homeFileInput" class="file-input" multiple hidden>
+                                <div class="upload-content">
+                                    <div class="icon-pulse-container"><i class='bx bx-cloud-upload'></i></div>
+                                    <h3>Kéo thả tài liệu vào đây</h3>
+                                    <p>Hoặc click để duyệt file. Máy chủ nội bộ sẽ xử lý cực nhanh và bảo mật tuyệt đối.</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Home General Settings (Format Selector) -->
+                            <div class="settings-section" id="homeSettings">
+                                <div class="files-preview-list compact" id="homeFilesList"></div>
+
+                                <div class="format-selection-area">
+                                    <h4>Chuyển thành định dạng:</h4>
+                                    <div class="format-grid">
+                                        <label class="format-card"><input type="radio" name="target_format" value="pdf" checked> <div class="fmt-inner"><i class='bx bxs-file-pdf'></i> PDF</div></label>
+                                        <label class="format-card"><input type="radio" name="target_format" value="docx"> <div class="fmt-inner"><i class='bx bxs-file-doc'></i> DOCX</div></label>
+                                        <label class="format-card"><input type="radio" name="target_format" value="jpg"> <div class="fmt-inner"><i class='bx bx-image'></i> JPG</div></label>
+                                        <label class="format-card"><input type="radio" name="target_format" value="txt"> <div class="fmt-inner"><i class='bx bx-text'></i> TXT</div></label>
+                                    </div>
+                                </div>
+
+                                <div class="action-footer">
+                                    <button class="btn-secondary" id="btnHomeClear">Xóa tất cả</button>
+                                    <button class="btn-primary" id="btnHomeProcess">Bắt đầu xử lý <i class='bx bx-chevron-right'></i></button>
+                                </div>
+                            </div>
+
+                            <div class="progress-section" id="homeProgressSection">
+                                <div class="status-indicator" id="homeStatusIndicator"><div class="spinner"></div></div>
+                                <h3 id="homeStatusTitle">Đang xử lý</h3>
+                                <p id="homeStatusDesc">Vui lòng đợi hệ thống tổng hợp...</p>
+                                <div class="progress-bar-container"><div class="progress-bar" id="homeProgressBar"></div></div>
+                                <div class="success-actions" id="homeSuccessActions">
+                                    <button class="btn-primary" id="btnHomeDownload"><i class='bx bx-download'></i> Tải kết quả</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 2: SPECIFIC TOOL WORKSPACE -->
+                <div id="viewTool" class="view-section" style="display: none;">
+                    <div class="tool-workspace">
+                        <div class="tool-workspace-header">
+                            <h2 id="currentToolTitle">Nối PDF</h2>
+                        </div>
+                        
+                        <div class="converter-card" style="box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+                            <div class="upload-section active" id="toolDropzone">
+                                <input type="file" id="toolFileInput" class="file-input" multiple hidden>
+                                <div class="upload-content">
+                                    <div class="icon-container"><i class='bx bx-layer-plus'></i></div>
+                                    <h3>Kéo thả tài liệu đặc nhiệm vào đây</h3>
+                                    <p>Máy chủ AI sẽ xử lý yêu cầu của bạn</p>
+                                </div>
+                            </div>
+
+                            <div class="settings-section" id="toolSettings">
+                                <div class="files-preview-list" id="toolFilesList"></div>
+
+                                <div class="dynamic-options" id="toolDynamicOptions">
+                                    <div class="option-group" id="opt-ranges" style="display: none;">
+                                        <label>Khoảng trang cắt (Ví dụ: 1-5)</label>
+                                        <input type="text" id="inputPageRange" class="custom-input" placeholder="1-3">
+                                    </div>
+                                    <div class="option-group" id="opt-password" style="display: none;">
+                                        <label>Mật khẩu</label>
+                                        <input type="password" id="inputPdfPassword" class="custom-input">
+                                    </div>
+                                    <div class="option-group" id="opt-watermark" style="display: none;">
+                                        <label>Nội dung bản quyền</label>
+                                        <input type="text" id="inputWatermarkText" class="custom-input">
+                                    </div>
+                                </div>
+
+                                <div class="action-footer">
+                                    <button class="btn-secondary" id="btnToolClear">Làm lại</button>
+                                    <button class="btn-primary" id="btnToolProcess">Thực thi ngay</button>
+                                </div>
+                            </div>
+
+                            <div class="progress-section" id="toolProgressSection">
+                                <div class="status-indicator" id="toolStatusIndicator"><div class="spinner"></div></div>
+                                <h3 id="toolStatusTitle">Đang thao tác</h3>
+                                <p id="toolStatusDesc">Vui lòng đợi</p>
+                                <div class="progress-bar-container"><div class="progress-bar" id="toolProgressBar"></div></div>
+                                <div class="success-actions" id="toolSuccessActions">
+                                    <button class="btn-primary" id="btnToolDownload"><i class='bx bx-download'></i> Tải tệp hoàn chỉnh</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
